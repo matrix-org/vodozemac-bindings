@@ -1,0 +1,18 @@
+[package]
+name = "vodozemac-python"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "vodozemac"
+crate-type = ["cdylib"]
+
+[package.metadata.maturin]
+name = "vodozemac"
+
+[dependencies.vodozemac]
+path = "../vodozemac"
+
+[dependencies.pyo3]
+version = "0.15.1"
+features = ["extension-module"]
