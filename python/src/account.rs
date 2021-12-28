@@ -54,6 +54,10 @@ impl Account {
         self.inner.generate_fallback_key()
     }
 
+    fn mark_keys_as_published(&mut self) {
+        self.inner.mark_keys_as_published()
+    }
+
     fn create_outbound_session(&self, identity_key: &str, one_time_key: &str) -> Session {
         let identity_key = vodozemac::Curve25519PublicKey::from_base64(identity_key).unwrap();
         let one_time_key = vodozemac::Curve25519PublicKey::from_base64(one_time_key).unwrap();
