@@ -5,3 +5,4 @@ python/tests/__pycache__
 javascript/node_modules
 javascript/yarn-error.log
 javascript/yarn.lock
+.ccls-cache

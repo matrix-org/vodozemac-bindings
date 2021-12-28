@@ -1,0 +1,22 @@
+[package]
+name = "vodozemac-cpp"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "vodozemac"
+crate-type = ["staticlib"]
+
+[dependencies]
+anyhow = "1.0.42"
+cxx = "1.0"
+
+[package.metadata.maturin]
+name = "vodozemac"
+
+[dependencies.vodozemac]
+git = "https://github.com/matrix-org/vodozemac"
+rev = "6976cca186cbf04061cfa558771f8203fcb11acf"
+
+[build-dependencies]
+cxx-build = "1.0"
