@@ -14,6 +14,7 @@ impl Sas {
         }
     }
 
+    #[getter]
     fn public_key(&self) -> &str {
         self.inner.public_key_encoded()
     }
@@ -57,10 +58,12 @@ pub struct SasBytes {
 
 #[pymethods]
 impl SasBytes {
+    #[getter]
     fn emoji_indices(&self) -> [u8; 7] {
         self.inner.emoji_indices()
     }
 
+    #[getter]
     fn decimals(&self) -> (u16, u16, u16) {
         self.inner.decimals()
     }
