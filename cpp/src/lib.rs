@@ -1,9 +1,9 @@
 mod account;
-mod session;
 mod sas;
+mod session;
 
-use account::{Account, new_account};
-use sas::{Sas, EstablishedSas, SasBytes, new_sas};
+use account::{new_account, Account};
+use sas::{new_sas, EstablishedSas, Sas, SasBytes};
 use session::Session;
 
 #[cxx::bridge]
@@ -54,7 +54,7 @@ mod ffi {
         type Sas;
         fn new_sas() -> Box<Sas>;
         fn public_key(self: &Sas) -> &str;
-        fn diffie_hellman(self: &Sas, other_public_key: &str) -> Result<Box<EstablishedSas>>;
+        fn diffie_hellman(self: &mut Sas, other_public_key: &str) -> Result<Box<EstablishedSas>>;
 
         type EstablishedSas;
         fn bytes(self: &EstablishedSas, info: &str) -> Box<SasBytes>;

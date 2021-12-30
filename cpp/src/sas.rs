@@ -1,25 +1,34 @@
 pub struct Sas {
-    inner: vodozemac::sas::Sas,
+    inner: Option<vodozemac::sas::Sas>,
+    public_key: String,
 }
 
 pub fn new_sas() -> Box<Sas> {
+    let sas = vodozemac::sas::Sas::new();
+    let public_key = sas.public_key_encoded().to_owned();
+
     Box::new(Sas {
-        inner: vodozemac::sas::Sas::new(),
+        inner: Some(sas),
+        public_key,
     })
 }
 
 impl Sas {
     pub fn public_key(&self) -> &str {
-        self.inner.public_key_encoded()
+        &self.public_key
     }
 
     pub fn diffie_hellman(
-        &self,
+        &mut self,
         other_public_key: &str,
-    ) -> Result<Box<EstablishedSas>, vodozemac::sas::PublicKeyError> {
-        self.inner
-            .diffie_hellman_with_raw(other_public_key)
-            .map(|s| Box::new(EstablishedSas { inner: s }))
+    ) -> Result<Box<EstablishedSas>, anyhow::Error> {
+        if let Some(sas) = self.inner.take() {
+            let sas = sas.diffie_hellman_with_raw(other_public_key)?;
+
+            Ok(Box::new(EstablishedSas { inner: sas }))
+        } else {
+            anyhow::bail!("The sas object has been already used")
+        }
     }
 }
 
