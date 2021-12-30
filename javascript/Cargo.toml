@@ -9,7 +9,7 @@ crate-type = ["cdylib"]
 
 [dependencies.vodozemac]
 git = "https://github.com/matrix-org/vodozemac"
-rev = "6976cca186cbf04061cfa558771f8203fcb11acf"
+rev = "fa7e658147c4730dfe828f05e80520d2f3ebabdc"
 
 [dependencies]
 wasm-bindgen = "0.2.74"
