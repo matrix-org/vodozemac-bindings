@@ -18,7 +18,7 @@ impl Sas {
         self.inner.public_key_encoded().to_owned()
     }
 
-    pub fn diffie_hellman(&self, key: &str) -> EstablishedSas {
+    pub fn diffie_hellman(self, key: &str) -> EstablishedSas {
         let sas = self
             .inner
             .diffie_hellman_with_raw(key)

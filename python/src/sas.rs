@@ -2,30 +2,36 @@ use pyo3::prelude::*;
 
 #[pyclass]
 pub struct Sas {
-    inner: vodozemac::sas::Sas,
+    inner: Option<vodozemac::sas::Sas>,
+    public_key: String,
 }
 
 #[pymethods]
 impl Sas {
     #[new]
     fn new() -> Self {
+        let sas = vodozemac::sas::Sas::new();
+        let public_key = sas.public_key_encoded().to_string();
+
         Self {
-            inner: vodozemac::sas::Sas::new(),
+            inner: Some(sas),
+            public_key,
         }
     }
 
     #[getter]
     fn public_key(&self) -> &str {
-        self.inner.public_key_encoded()
+        &self.public_key
     }
 
-    fn diffie_hellman(&self, key: &str) -> EstablishedSas {
-        let sas = self
-            .inner
-            .diffie_hellman_with_raw(key)
-            .expect("Invalid public key");
+    fn diffie_hellman(&mut self, key: &str) -> Option<EstablishedSas> {
+        let sas = self.inner.take();
 
-        EstablishedSas { inner: sas }
+        sas.map(|s| {
+            let sas = s.diffie_hellman_with_raw(key).expect("Invalid public key");
+
+            EstablishedSas { inner: sas }
+        })
     }
 }
 
@@ -47,7 +53,9 @@ impl EstablishedSas {
     }
 
     fn verify_mac(&self, input: &str, info: &str, tag: &str) {
-        self.inner.verify_mac(input, info, tag).expect("Mac was invalid");
+        self.inner
+            .verify_mac(input, info, tag)
+            .expect("Mac was invalid");
     }
 }
 
