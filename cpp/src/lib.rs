@@ -2,7 +2,7 @@ mod account;
 mod sas;
 mod session;
 
-use account::{new_account, Account};
+use account::{new_account, Account, InboundCreationResult};
 use sas::{new_sas, EstablishedSas, Sas, SasBytes};
 use session::Session;
 
@@ -23,6 +23,7 @@ mod ffi {
     #[namespace = "olm"]
     extern "Rust" {
         type Account;
+        type InboundCreationResult;
         fn new_account() -> Box<Account>;
         fn ed25519_key(self: &Account) -> &str;
         fn curve25519_key(self: &Account) -> &str;
@@ -41,7 +42,7 @@ mod ffi {
             self: &mut Account,
             identity_key: &str,
             message: OlmMessage,
-        ) -> Result<Box<Session>>;
+        ) -> Result<Box<InboundCreationResult>>;
 
         type Session;
         fn session_id(self: &Session) -> String;

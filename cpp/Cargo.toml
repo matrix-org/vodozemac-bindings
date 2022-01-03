@@ -7,16 +7,13 @@ edition = "2021"
 name = "vodozemac"
 crate-type = ["staticlib"]
 
+[dependencies.vodozemac]
+git = "https://github.com/matrix-org/vodozemac"
+rev = "ce947cc5759a1a647082d78213de9ee9cc080803"
+
 [dependencies]
 anyhow = "1.0.42"
 cxx = "1.0"
-
-[package.metadata.maturin]
-name = "vodozemac"
-
-[dependencies.vodozemac]
-git = "https://github.com/matrix-org/vodozemac"
-rev = "6976cca186cbf04061cfa558771f8203fcb11acf"
 
 [build-dependencies]
 cxx-build = "1.0"

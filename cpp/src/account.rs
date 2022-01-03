@@ -11,6 +11,20 @@ pub fn new_account() -> Box<Account> {
     })
 }
 
+pub struct InboundCreationResult {
+    pub session: Session,
+    pub plaintext: String,
+}
+
+impl From<vodozemac::olm::InboundCreationResult> for InboundCreationResult {
+    fn from(v: vodozemac::olm::InboundCreationResult) -> Self {
+        Self {
+            session: Session { inner: v.session },
+            plaintext: v.plaintext,
+        }
+    }
+}
+
 impl Account {
     pub fn ed25519_key(&self) -> &str {
         self.inner.ed25519_key_encoded()
@@ -74,7 +88,7 @@ impl Account {
         &mut self,
         identity_key: &str,
         message: OlmMessage,
-    ) -> Result<Box<Session>, anyhow::Error> {
+    ) -> Result<Box<InboundCreationResult>, anyhow::Error> {
         let message = vodozemac::olm::OlmMessage::from_type_and_ciphertext(
             message.message_type,
             message.ciphertext,
@@ -89,9 +103,9 @@ impl Account {
         if let vodozemac::olm::OlmMessage::PreKey(m) = message {
             let identity_key = vodozemac::Curve25519PublicKey::from_base64(identity_key)?;
 
-            let session = self.inner.create_inbound_session(&identity_key, &m)?;
+            let result = self.inner.create_inbound_session(&identity_key, &m)?;
 
-            Ok(Box::new(Session { inner: session }))
+            Ok(Box::new(result.into()))
         } else {
             anyhow::bail!("Invalid message type, a pre-key message is required")
         }
