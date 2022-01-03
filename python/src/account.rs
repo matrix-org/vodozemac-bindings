@@ -68,7 +68,11 @@ impl Account {
         Session { inner: session }
     }
 
-    fn create_inbound_session(&mut self, identity_key: &str, message: &OlmMessage) -> Session {
+    fn create_inbound_session(
+        &mut self,
+        identity_key: &str,
+        message: &OlmMessage,
+    ) -> (Session, String) {
         let identity_key = vodozemac::Curve25519PublicKey::from_base64(identity_key).unwrap();
 
         let message = vodozemac::olm::OlmMessage::from_type_and_ciphertext(
@@ -78,12 +82,17 @@ impl Account {
         .unwrap();
 
         if let vodozemac::olm::OlmMessage::PreKey(message) = message {
-            let session = self
+            let result = self
                 .inner
                 .create_inbound_session(&identity_key, &message)
                 .unwrap();
 
-            Session { inner: session }
+            (
+                Session {
+                    inner: result.session,
+                },
+                result.plaintext,
+            )
         } else {
             panic!("Invalid message type")
         }

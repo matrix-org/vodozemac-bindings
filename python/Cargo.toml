@@ -12,7 +12,7 @@ name = "vodozemac"
 
 [dependencies.vodozemac]
 git = "https://github.com/matrix-org/vodozemac"
-rev = "fa7e658147c4730dfe828f05e80520d2f3ebabdc"
+rev = "ce947cc5759a1a647082d78213de9ee9cc080803"
 
 [dependencies.pyo3]
 version = "0.15.1"
