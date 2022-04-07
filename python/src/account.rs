@@ -1,8 +1,10 @@
 use std::collections::HashMap;
 
-use pyo3::prelude::*;
+use pyo3::{prelude::*, types::PyType};
 
-use super::{session::Session, OlmMessage};
+use crate::{LibolmPickleError, PickleError};
+
+use super::{session::Session, KeyError, OlmMessage, SessionError};
 
 #[pyclass]
 pub struct Account {
@@ -18,6 +20,30 @@ impl Account {
         }
     }
 
+    #[classmethod]
+    fn from_pickle(_cls: &PyType, pickle: &str, pickle_key: &[u8]) -> Result<Self, PickleError> {
+        let pickle_key: &[u8; 32] = pickle_key
+            .try_into()
+            .map_err(|_| PickleError::InvalidKeySize(pickle_key.len()))?;
+
+        let pickle = vodozemac::olm::AccountPickle::from_encrypted(pickle, pickle_key)?;
+
+        let inner = vodozemac::olm::Account::from_pickle(pickle);
+
+        Ok(Self { inner })
+    }
+
+    #[classmethod]
+    fn from_libolm_pickle(
+        _cls: &PyType,
+        pickle: &str,
+        pickle_key: &str,
+    ) -> Result<Self, LibolmPickleError> {
+        let inner = vodozemac::olm::Account::from_libolm_pickle(pickle, pickle_key)?;
+
+        Ok(Self { inner })
+    }
+
     #[getter]
     fn ed25519_key(&self) -> &str {
         self.inner.ed25519_key_encoded()
@@ -29,7 +55,7 @@ impl Account {
     }
 
     fn sign(&self, message: &str) -> String {
-        self.inner.sign(message)
+        self.inner.sign(message).to_base64()
     }
 
     #[getter]
@@ -46,7 +72,7 @@ impl Account {
         self.inner
             .fallback_key()
             .into_iter()
-            .map(|(k, v)| (k.to_base64(), v))
+            .map(|(k, v)| (k.to_base64(), v.to_base64()))
             .collect()
     }
 
@@ -58,43 +84,42 @@ impl Account {
         self.inner.mark_keys_as_published()
     }
 
-    fn create_outbound_session(&self, identity_key: &str, one_time_key: &str) -> Session {
-        let identity_key = vodozemac::Curve25519PublicKey::from_base64(identity_key).unwrap();
-        let one_time_key = vodozemac::Curve25519PublicKey::from_base64(one_time_key).unwrap();
+    fn create_outbound_session(
+        &self,
+        identity_key: &str,
+        one_time_key: &str,
+    ) -> Result<Session, KeyError> {
+        let identity_key = vodozemac::Curve25519PublicKey::from_base64(identity_key)?;
+        let one_time_key = vodozemac::Curve25519PublicKey::from_base64(one_time_key)?;
+
         let session = self
             .inner
             .create_outbound_session(identity_key, one_time_key);
 
-        Session { inner: session }
+        Ok(Session { inner: session })
     }
 
     fn create_inbound_session(
         &mut self,
         identity_key: &str,
         message: &OlmMessage,
-    ) -> (Session, String) {
-        let identity_key = vodozemac::Curve25519PublicKey::from_base64(identity_key).unwrap();
+    ) -> Result<(Session, String), SessionError> {
+        let identity_key = vodozemac::Curve25519PublicKey::from_base64(identity_key)?;
 
-        let message = vodozemac::olm::OlmMessage::from_type_and_ciphertext(
-            message.message_type,
-            message.ciphertext.to_owned(),
-        )
-        .unwrap();
+        let message =
+            vodozemac::olm::OlmMessage::from_parts(message.message_type, &message.ciphertext)?;
 
         if let vodozemac::olm::OlmMessage::PreKey(message) = message {
-            let result = self
-                .inner
-                .create_inbound_session(&identity_key, &message)
-                .unwrap();
+            let result = self.inner.create_inbound_session(&identity_key, &message)?;
 
-            (
+            Ok((
                 Session {
                     inner: result.session,
                 },
                 result.plaintext,
-            )
+            ))
         } else {
-            panic!("Invalid message type")
+            Err(SessionError::InvalidMessageType)
         }
     }
 }

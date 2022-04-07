@@ -7,12 +7,16 @@ edition = "2021"
 name = "vodozemac"
 crate-type = ["cdylib"]
 
+[dependencies]
+paste = "1.0.7"
+thiserror = "1.0.30"
+
 [package.metadata.maturin]
 name = "vodozemac"
 
 [dependencies.vodozemac]
 git = "https://github.com/matrix-org/vodozemac"
-rev = "ce947cc5759a1a647082d78213de9ee9cc080803"
+rev = "0df5cd161ee57f66d57e83f8b2b6f67704c3cabd"
 
 [dependencies.pyo3]
 version = "0.15.1"
