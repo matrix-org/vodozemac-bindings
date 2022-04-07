@@ -59,7 +59,7 @@ impl Account {
     }
 
     pub fn sign(&self, message: &str) -> String {
-        self.inner.sign(message)
+        self.inner.sign(message).to_base64()
     }
 
     #[wasm_bindgen(method, getter)]
@@ -79,7 +79,7 @@ impl Account {
             .inner
             .fallback_key()
             .into_iter()
-            .map(|(k, v)| (k.to_base64(), v))
+            .map(|(k, v)| (k.to_base64(), v.to_base64()))
             .collect();
 
         Ok(serde_wasm_bindgen::to_value(&keys)?)
@@ -110,11 +110,9 @@ impl Account {
     ) -> InboundCreationResult {
         let identity_key = vodozemac::Curve25519PublicKey::from_base64(identity_key).unwrap();
 
-        let message = vodozemac::olm::OlmMessage::from_type_and_ciphertext(
-            message.message_type,
-            message.ciphertext.to_owned().into(),
-        )
-        .unwrap();
+        let message =
+            vodozemac::olm::OlmMessage::from_parts(message.message_type, &message.ciphertext)
+                .unwrap();
 
         if let vodozemac::olm::OlmMessage::PreKey(message) = message {
             self.inner

@@ -6,11 +6,10 @@ pub use account::Account;
 pub use sas::{EstablishedSas, Sas, SasBytes};
 pub use session::Session;
 
-use js_sys::JsString;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct OlmMessage {
-    ciphertext: JsString,
+    ciphertext: String,
     message_type: usize,
 }

@@ -42,12 +42,14 @@ impl EstablishedSas {
     }
 
     pub fn calculate_mac(&self, input: &str, info: &str) -> String {
-        self.inner.calculate_mac(input, info)
+        self.inner.calculate_mac(input, info).to_base64()
     }
 
     pub fn verify_mac(&self, input: &str, info: &str, tag: &str) {
+        let tag = vodozemac::sas::Mac::from_base64(tag).unwrap();
+
         self.inner
-            .verify_mac(input, info, tag)
+            .verify_mac(input, info, &tag)
             .expect("Mac was invalid");
     }
 }
