@@ -1,6 +1,6 @@
 use pyo3::{prelude::*, types::PyType};
 
-use crate::{LibolmPickleError, PickleError, SessionError};
+use crate::error::{LibolmPickleError, PickleError, SessionError};
 
 use super::OlmMessage;
 

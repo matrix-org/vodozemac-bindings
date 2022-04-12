@@ -1,7 +1,7 @@
 use pyo3::{prelude::*, types::PyType};
 use vodozemac::megolm::{ExportedSessionKey, MegolmMessage, SessionKey};
 
-use crate::{LibolmPickleError, MegolmDecryptionError, PickleError, SessionKeyDecodeError};
+use crate::error::{LibolmPickleError, MegolmDecryptionError, PickleError, SessionKeyDecodeError};
 
 #[pyclass]
 pub struct GroupSession {

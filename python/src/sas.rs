@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 use vodozemac::Curve25519PublicKey;
 
-use crate::SasError;
+use crate::error::SasError;
 
 #[pyclass]
 pub struct Sas {

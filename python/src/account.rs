@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use pyo3::{prelude::*, types::PyType};
 
-use crate::{LibolmPickleError, PickleError};
+use crate::error::{KeyError, LibolmPickleError, PickleError, SessionError};
 
-use super::{session::Session, KeyError, OlmMessage, SessionError};
+use super::{session::Session, OlmMessage};
 
 #[pyclass]
 pub struct Account {
