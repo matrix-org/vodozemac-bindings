@@ -1,4 +1,5 @@
 mod account;
+mod group_sessions;
 mod sas;
 mod session;
 
@@ -38,23 +39,47 @@ macro_rules! create_error {
     };
 }
 
-macro_rules! from_error {
-    ($source:ty, $target:ty, $variant:ident) => {
-        impl From<$source> for $target {
-            fn from(e: $source) -> Self {
-                Self::$variant(e.into())
-            }
-        }
-    };
+create_error!(vodozemac::KeyError, Key);
+create_error!(vodozemac::LibolmPickleError, LibolmPickle);
+create_error!(vodozemac::megolm::SessionKeyDecodeError, SessionKeyDecode);
+
+pyo3::create_exception!(module, PickleException, pyo3::exceptions::PyException);
+pyo3::create_exception!(
+    module,
+    SessionCreationException,
+    pyo3::exceptions::PyException
+);
+pyo3::create_exception!(module, DecodeException, pyo3::exceptions::PyException);
+pyo3::create_exception!(module, SasException, pyo3::exceptions::PyException);
+pyo3::create_exception!(
+    module,
+    OlmDecryptionException,
+    pyo3::exceptions::PyException
+);
+pyo3::create_exception!(
+    module,
+    MegolmDecryptionException,
+    pyo3::exceptions::PyException
+);
+
+#[derive(Debug, Error)]
+pub enum MegolmDecryptionError {
+    #[error(transparent)]
+    Decode(#[from] vodozemac::DecodeError),
+    #[error(transparent)]
+    Decryption(#[from] vodozemac::megolm::DecryptionError),
 }
 
-create_error!(vodozemac::KeyError, Key);
-create_error!(vodozemac::DecodeError, Decode);
-create_error!(vodozemac::olm::DecryptionError, OlmDecryption);
-create_error!(vodozemac::olm::SessionCreationError, SessionCreation);
-create_error!(vodozemac::LibolmPickleError, LibolmPickle);
-pyo3::create_exception!(module, PickleException, pyo3::exceptions::PyException);
-pyo3::create_exception!(module, SasException, pyo3::exceptions::PyException);
+impl From<MegolmDecryptionError> for PyErr {
+    fn from(e: MegolmDecryptionError) -> Self {
+        match e {
+            MegolmDecryptionError::Decode(e) => DecodeException::new_err(e.to_string()),
+            MegolmDecryptionError::Decryption(e) => {
+                MegolmDecryptionException::new_err(e.to_string())
+            }
+        }
+    }
+}
 
 #[derive(Debug, Error)]
 pub enum SasError {
@@ -71,7 +96,7 @@ pub enum SasError {
 impl From<SasError> for PyErr {
     fn from(e: SasError) -> Self {
         match e {
-            SasError::Key(e) => SasException::new_err(e.to_string()),
+            SasError::Key(e) => KeyException::new_err(e.to_string()),
             SasError::Sas(e) => SasException::new_err(e.to_string()),
             SasError::Mac(e) => SasException::new_err(e.to_string()),
             SasError::Used => SasException::new_err(e.to_string()),
@@ -82,29 +107,24 @@ impl From<SasError> for PyErr {
 #[derive(Debug, Error)]
 pub enum SessionError {
     #[error(transparent)]
-    Key(#[from] KeyError),
+    Key(#[from] vodozemac::KeyError),
     #[error(transparent)]
-    Decode(#[from] DecodeError),
+    Decode(#[from] vodozemac::DecodeError),
     #[error(transparent)]
-    Decryption(#[from] OlmDecryptionError),
+    Decryption(#[from] vodozemac::olm::DecryptionError),
     #[error(transparent)]
-    Creation(#[from] SessionCreationError),
+    Creation(#[from] vodozemac::olm::SessionCreationError),
     #[error("Invalid message type, a pre-key message is needed to create a Session")]
     InvalidMessageType,
 }
 
-from_error!(vodozemac::olm::DecryptionError, SessionError, Decryption);
-from_error!(vodozemac::DecodeError, SessionError, Decode);
-from_error!(vodozemac::KeyError, SessionError, Key);
-from_error!(vodozemac::olm::SessionCreationError, SessionError, Creation);
-
 impl From<SessionError> for PyErr {
     fn from(e: SessionError) -> Self {
         match e {
-            SessionError::Key(e) => e.into(),
-            SessionError::Decode(e) => e.into(),
-            SessionError::Decryption(e) => e.into(),
-            SessionError::Creation(e) => e.into(),
+            SessionError::Key(e) => KeyException::new_err(e.to_string()),
+            SessionError::Decode(e) => DecodeException::new_err(e.to_string()),
+            SessionError::Decryption(e) => OlmDecryptionException::new_err(e.to_string()),
+            SessionError::Creation(e) => SessionCreationException::new_err(e.to_string()),
             SessionError::InvalidMessageType => PyValueError::new_err(e.to_string()),
         }
     }
@@ -150,11 +170,18 @@ fn mymodule(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<session::Session>()?;
     m.add_class::<OlmMessage>()?;
     m.add_class::<sas::Sas>()?;
+    m.add_class::<group_sessions::GroupSession>()?;
+    m.add_class::<group_sessions::InboundGroupSession>()?;
+
     m.add("KeyException", py.get_type::<KeyException>())?;
-    m.add(
-        "OlmDecryptionException",
-        py.get_type::<OlmDecryptionException>(),
-    )?;
+    m.add("DecodeException", py.get_type::<DecodeException>())?;
+    m.add("LibolmPickleException", py.get_type::<LibolmPickleException>())?;
+    m.add("SessionKeyDecodeException", py.get_type::<SessionKeyDecodeException>())?;
+    m.add("PickleException", py.get_type::<PickleException>())?;
+    m.add("SessionCreationException", py.get_type::<SessionCreationException>())?;
+    m.add("SasException", py.get_type::<SasException>())?;
+    m.add("OlmDecryptionException", py.get_type::<OlmDecryptionException>())?;
+    m.add("MegolmDecryptionException", py.get_type::<MegolmDecryptionException>())?;
 
     Ok(())
 }
