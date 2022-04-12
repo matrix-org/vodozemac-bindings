@@ -63,6 +63,11 @@ impl Account {
         self.inner.one_time_keys_encoded()
     }
 
+    #[getter]
+    fn max_number_of_one_time_keys(&self) -> usize {
+        self.inner.max_number_of_one_time_keys()
+    }
+
     fn generate_one_time_keys(&mut self, count: usize) {
         self.inner.generate_one_time_keys(count)
     }
