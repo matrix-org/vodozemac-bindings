@@ -48,6 +48,10 @@ impl EstablishedSas {
         self.inner.calculate_mac(input, info).to_base64()
     }
 
+    pub fn calculate_mac_invalid_base64(&self, input: &str, info: &str) -> String {
+        self.inner.calculate_mac_invalid_base64(input, info)
+    }
+
     pub fn verify_mac(&self, input: &str, info: &str, tag: &str) -> Result<(), JsValue> {
         let tag = vodozemac::sas::Mac::from_base64(tag).map_err(error_to_js)?;
 

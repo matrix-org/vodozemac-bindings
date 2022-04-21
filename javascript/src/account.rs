@@ -50,6 +50,32 @@ impl Account {
         }
     }
 
+    pub fn from_pickle(pickle: &str, pickle_key: &[u8]) -> Result<Account, JsValue> {
+        let pickle_key: &[u8; 32] = pickle_key.try_into().map_err(error_to_js)?;
+
+        let pickle = vodozemac::olm::AccountPickle::from_encrypted(pickle, pickle_key)
+            .map_err(error_to_js)?;
+
+        let inner = vodozemac::olm::Account::from_pickle(pickle);
+
+        Ok(Self { inner })
+    }
+
+    pub fn from_libolm_pickle(pickle: &str, pickle_key: &str) -> Result<Account, JsValue> {
+        let inner =
+            vodozemac::olm::Account::from_libolm_pickle(pickle, pickle_key).map_err(error_to_js)?;
+
+        Ok(Self { inner })
+    }
+
+    pub fn pickle(&self, pickle_key: &[u8]) -> Result<String, JsValue> {
+        let pickle_key: &[u8; 32] = pickle_key
+            .try_into()
+            .map_err(|_| JsError::new("Invalid pickle key length, expected 32 bytes"))?;
+
+        Ok(self.inner.pickle().encrypt(pickle_key))
+    }
+
     #[wasm_bindgen(method, getter)]
     pub fn ed25519_key(&self) -> String {
         self.inner.ed25519_key_encoded().to_owned()
@@ -60,13 +86,13 @@ impl Account {
         self.inner.curve25519_key_encoded().to_owned()
     }
 
+    pub fn sign(&self, message: &str) -> String {
+        self.inner.sign(message).to_base64()
+    }
+
     #[wasm_bindgen(method, getter)]
     pub fn max_number_of_one_time_keys(&self) -> usize {
         self.inner.max_number_of_one_time_keys()
-    }
-
-    pub fn sign(&self, message: &str) -> String {
-        self.inner.sign(message).to_base64()
     }
 
     #[wasm_bindgen(method, getter)]

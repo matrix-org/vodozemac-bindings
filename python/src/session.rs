@@ -1,6 +1,6 @@
 use pyo3::{prelude::*, types::PyType};
 
-use crate::error::{LibolmPickleError, PickleError, SessionError};
+use crate::{LibolmPickleError, PickleError, SessionError};
 
 use super::OlmMessage;
 
@@ -14,6 +14,14 @@ impl Session {
     #[getter]
     fn session_id(&self) -> String {
         self.inner.session_id()
+    }
+
+    fn pickle(&self, pickle_key: &[u8]) -> Result<String, PickleError> {
+        let pickle_key: &[u8; 32] = pickle_key
+            .try_into()
+            .map_err(|_| PickleError::InvalidKeySize(pickle_key.len()))?;
+
+        Ok(self.inner.pickle().encrypt(pickle_key))
     }
 
     fn session_matches(&self, message: &OlmMessage) -> bool {
@@ -32,24 +40,14 @@ impl Session {
         }
     }
 
-    fn pickle(&self, pickle_key: &[u8]) -> Result<String, PickleError> {
-        let pickle_key: &[u8; 32] = pickle_key
-            .try_into()
-            .map_err(|_| PickleError::InvalidKeySize(pickle_key.len()))?;
-
-        Ok(self.inner.pickle().encrypt(pickle_key))
-    }
-
     #[classmethod]
-    fn from_pickle(_cls: &PyType, pickle: &str, pickle_key: &[u8]) -> Result<Self, PickleError> {
-        let pickle_key: &[u8; 32] = pickle_key
-            .try_into()
-            .map_err(|_| PickleError::InvalidKeySize(pickle_key.len()))?;
-        let pickle = vodozemac::olm::SessionPickle::from_encrypted(pickle, pickle_key)?;
+    fn from_pickle(_cls: &PyType, pickle: &str, pickle_key: &[u8]) -> Self {
+        let pickle_key: &[u8; 32] = pickle_key.try_into().unwrap();
+        let pickle = vodozemac::olm::SessionPickle::from_encrypted(pickle, pickle_key).unwrap();
 
         let session = vodozemac::olm::Session::from_pickle(pickle);
 
-        Ok(Self { inner: session })
+        Self { inner: session }
     }
 
     #[classmethod]
