@@ -1,6 +1,7 @@
 mod account;
 mod sas;
 mod session;
+mod group_sessions;
 
 pub use account::Account;
 pub use sas::{EstablishedSas, Sas, SasBytes};
