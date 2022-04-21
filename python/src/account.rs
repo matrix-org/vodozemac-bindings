@@ -44,6 +44,14 @@ impl Account {
         Ok(Self { inner })
     }
 
+    fn pickle(&self, pickle_key: &[u8]) -> Result<String, PickleError> {
+        let pickle_key: &[u8; 32] = pickle_key
+            .try_into()
+            .map_err(|_| PickleError::InvalidKeySize(pickle_key.len()))?;
+
+        Ok(self.inner.pickle().encrypt(pickle_key))
+    }
+
     #[getter]
     fn ed25519_key(&self) -> &str {
         self.inner.ed25519_key_encoded()
