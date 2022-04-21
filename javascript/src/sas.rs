@@ -1,5 +1,7 @@
 use wasm_bindgen::prelude::*;
 
+use crate::error_to_js;
+
 #[wasm_bindgen]
 pub struct Sas {
     inner: vodozemac::sas::Sas,
@@ -14,17 +16,18 @@ impl Sas {
         }
     }
 
+    #[wasm_bindgen(getter)]
     pub fn public_key(&self) -> String {
         self.inner.public_key_encoded().to_owned()
     }
 
-    pub fn diffie_hellman(self, key: &str) -> EstablishedSas {
+    pub fn diffie_hellman(self, key: &str) -> Result<EstablishedSas, JsValue> {
         let sas = self
             .inner
             .diffie_hellman_with_raw(key)
-            .expect("Invalid public key");
+            .map_err(error_to_js)?;
 
-        EstablishedSas { inner: sas }
+        Ok(EstablishedSas { inner: sas })
     }
 }
 
@@ -45,12 +48,14 @@ impl EstablishedSas {
         self.inner.calculate_mac(input, info).to_base64()
     }
 
-    pub fn verify_mac(&self, input: &str, info: &str, tag: &str) {
-        let tag = vodozemac::sas::Mac::from_base64(tag).unwrap();
+    pub fn verify_mac(&self, input: &str, info: &str, tag: &str) -> Result<(), JsValue> {
+        let tag = vodozemac::sas::Mac::from_base64(tag).map_err(error_to_js)?;
 
         self.inner
             .verify_mac(input, info, &tag)
-            .expect("Mac was invalid");
+            .map_err(error_to_js)?;
+
+        Ok(())
     }
 }
 
@@ -61,10 +66,12 @@ pub struct SasBytes {
 
 #[wasm_bindgen]
 impl SasBytes {
+    #[wasm_bindgen(getter)]
     pub fn emoji_indices(&self) -> Vec<u8> {
         self.inner.emoji_indices().to_vec()
     }
 
+    #[wasm_bindgen(getter)]
     pub fn decimals(&self) -> Vec<u16> {
         let (first, second, third) = self.inner.decimals();
 

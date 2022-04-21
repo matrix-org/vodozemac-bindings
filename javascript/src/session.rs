@@ -1,5 +1,7 @@
 use wasm_bindgen::prelude::*;
 
+use crate::error_to_js;
+
 use super::OlmMessage;
 
 #[wasm_bindgen]
@@ -9,6 +11,7 @@ pub struct Session {
 
 #[wasm_bindgen]
 impl Session {
+    #[wasm_bindgen(getter)]
     pub fn session_id(&self) -> String {
         self.inner.session_id()
     }
@@ -24,11 +27,11 @@ impl Session {
         }
     }
 
-    pub fn decrypt(&mut self, message: &OlmMessage) -> String {
+    pub fn decrypt(&mut self, message: &OlmMessage) -> Result<String, JsValue> {
         let message =
             vodozemac::olm::OlmMessage::from_parts(message.message_type, &message.ciphertext)
-                .unwrap();
+                .map_err(error_to_js)?;
 
-        self.inner.decrypt(&message).unwrap()
+        Ok(self.inner.decrypt(&message).map_err(error_to_js)?)
     }
 }

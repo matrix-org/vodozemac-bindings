@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use wasm_bindgen::prelude::*;
 
+use crate::error_to_js;
+
 use super::{session::Session, OlmMessage};
 
 #[wasm_bindgen]
@@ -58,6 +60,11 @@ impl Account {
         self.inner.curve25519_key_encoded().to_owned()
     }
 
+    #[wasm_bindgen(method, getter)]
+    pub fn max_number_of_one_time_keys(&self) -> usize {
+        self.inner.max_number_of_one_time_keys()
+    }
+
     pub fn sign(&self, message: &str) -> String {
         self.inner.sign(message).to_base64()
     }
@@ -93,34 +100,42 @@ impl Account {
         self.inner.mark_keys_as_published()
     }
 
-    pub fn create_outbound_session(&self, identity_key: &str, one_time_key: &str) -> Session {
-        let identity_key = vodozemac::Curve25519PublicKey::from_base64(identity_key).unwrap();
-        let one_time_key = vodozemac::Curve25519PublicKey::from_base64(one_time_key).unwrap();
+    pub fn create_outbound_session(
+        &self,
+        identity_key: &str,
+        one_time_key: &str,
+    ) -> Result<Session, JsValue> {
+        let identity_key =
+            vodozemac::Curve25519PublicKey::from_base64(identity_key).map_err(error_to_js)?;
+        let one_time_key =
+            vodozemac::Curve25519PublicKey::from_base64(one_time_key).map_err(error_to_js)?;
         let session = self
             .inner
             .create_outbound_session(identity_key, one_time_key);
 
-        Session { inner: session }
+        Ok(Session { inner: session })
     }
 
     pub fn create_inbound_session(
         &mut self,
         identity_key: &str,
         message: &OlmMessage,
-    ) -> InboundCreationResult {
-        let identity_key = vodozemac::Curve25519PublicKey::from_base64(identity_key).unwrap();
+    ) -> Result<InboundCreationResult, JsValue> {
+        let identity_key =
+            vodozemac::Curve25519PublicKey::from_base64(identity_key).map_err(error_to_js)?;
 
         let message =
             vodozemac::olm::OlmMessage::from_parts(message.message_type, &message.ciphertext)
-                .unwrap();
+                .map_err(error_to_js)?;
 
         if let vodozemac::olm::OlmMessage::PreKey(message) = message {
-            self.inner
+            Ok(self
+                .inner
                 .create_inbound_session(&identity_key, &message)
-                .unwrap()
-                .into()
+                .map_err(error_to_js)?
+                .into())
         } else {
-            panic!("Invalid message type")
+            Err(JsError::new("Invalid message type, expected a pre-key message").into())
         }
     }
 }
