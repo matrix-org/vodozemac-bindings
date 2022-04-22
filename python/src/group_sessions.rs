@@ -82,7 +82,7 @@ impl InboundGroupSession {
     }
 
     #[classmethod]
-    fn import(_cls: &PyType, session_key: &str) -> Result<Self, SessionKeyDecodeError> {
+    fn import_session(_cls: &PyType, session_key: &str) -> Result<Self, SessionKeyDecodeError> {
         let key = ExportedSessionKey::from_base64(session_key)?;
 
         Ok(Self {
