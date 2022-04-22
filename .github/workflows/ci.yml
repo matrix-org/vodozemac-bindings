@@ -76,5 +76,5 @@ jobs:
     - name: Clippy
       uses: actions-rs/cargo@v1
       with:
-        command: run
-        args: rustup run nightly cargo clippy --all-targets -- -D warnings
+        command: clippy
+        args: --all-targets -- -D warnings
