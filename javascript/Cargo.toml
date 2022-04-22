@@ -13,6 +13,6 @@ rev = "e09c93f2c8df9770793abeec57ed984d5e1f3834"
 features = ["js"]
 
 [dependencies]
-wasm-bindgen = "0.2.79"
-js-sys = "0.3.56"
+wasm-bindgen = "0.2.80"
+js-sys = "0.3.57"
 serde-wasm-bindgen = "0.4.2"

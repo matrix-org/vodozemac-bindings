@@ -19,5 +19,5 @@ git = "https://github.com/matrix-org/vodozemac"
 rev = "e09c93f2c8df9770793abeec57ed984d5e1f3834"
 
 [dependencies.pyo3]
-version = "0.15.1"
+version = "0.16.4"
 features = ["extension-module"]
