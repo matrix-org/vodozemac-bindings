@@ -41,13 +41,15 @@ impl Session {
     }
 
     #[classmethod]
-    fn from_pickle(_cls: &PyType, pickle: &str, pickle_key: &[u8]) -> Self {
-        let pickle_key: &[u8; 32] = pickle_key.try_into().unwrap();
-        let pickle = vodozemac::olm::SessionPickle::from_encrypted(pickle, pickle_key).unwrap();
+    fn from_pickle(_cls: &PyType, pickle: &str, pickle_key: &[u8]) -> Result<Self, PickleError> {
+        let pickle_key: &[u8; 32] = pickle_key
+            .try_into()
+            .map_err(|_| PickleError::InvalidKeySize(pickle_key.len()))?;
+        let pickle = vodozemac::olm::SessionPickle::from_encrypted(pickle, pickle_key)?;
 
         let session = vodozemac::olm::Session::from_pickle(pickle);
 
-        Self { inner: session }
+        Ok(Self { inner: session })
     }
 
     #[classmethod]
