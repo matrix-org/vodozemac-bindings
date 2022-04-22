@@ -28,6 +28,11 @@ impl GroupSession {
         self.inner.session_key().to_base64()
     }
 
+    #[wasm_bindgen(getter)]
+    pub fn message_index(&self) -> u32 {
+        self.inner.message_index()
+    }
+
     pub fn encrypt(&mut self, plaintext: &str) -> String {
         self.inner.encrypt(plaintext).to_base64()
     }
@@ -99,6 +104,11 @@ impl InboundGroupSession {
     #[wasm_bindgen(getter)]
     pub fn session_id(&self) -> String {
         self.inner.session_id()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn first_known_index(&self) -> u32 {
+        self.inner.first_known_index()
     }
 
     pub fn export_at(&mut self, index: u32) -> Option<String> {
