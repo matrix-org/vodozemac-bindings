@@ -58,23 +58,10 @@ impl GroupSession {
     }
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(getter_with_clone)]
 pub struct DecryptedMessage {
-    plaintext: String,
-    message_index: u32,
-}
-
-#[wasm_bindgen]
-impl DecryptedMessage {
-    #[wasm_bindgen(getter)]
-    pub fn plaintext(&self) -> String {
-        self.plaintext.to_owned()
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn message_index(&self) -> u32 {
-        self.message_index
-    }
+    pub plaintext: String,
+    pub message_index: u32,
 }
 
 #[wasm_bindgen]
