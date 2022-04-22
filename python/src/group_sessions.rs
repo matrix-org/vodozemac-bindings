@@ -23,6 +23,11 @@ impl GroupSession {
     }
 
     #[getter]
+    fn message_index(&self) -> u32 {
+        self.inner.message_index()
+    }
+
+    #[getter]
     fn session_key(&self) -> String {
         self.inner.session_key().to_base64()
     }
@@ -88,6 +93,11 @@ impl InboundGroupSession {
     #[getter]
     fn session_id(&self) -> String {
         self.inner.session_id()
+    }
+
+    #[getter]
+    fn first_known_index(&self) -> u32 {
+        self.inner.first_known_index()
     }
 
     fn export_at(&mut self, index: u32) -> Option<String> {
