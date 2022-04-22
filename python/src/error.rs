@@ -5,7 +5,7 @@ use thiserror::Error;
 macro_rules! create_error {
     ($source:ty, $target:ident) => {
         paste! {
-            pyo3::create_exception!(module, [<$target Exception>], pyo3::exceptions::PyException);
+            pyo3::create_exception!(module, [<$target Exception>], pyo3::exceptions::PyValueError);
         }
 
         paste! {
@@ -38,23 +38,23 @@ create_error!(vodozemac::KeyError, Key);
 create_error!(vodozemac::LibolmPickleError, LibolmPickle);
 create_error!(vodozemac::megolm::SessionKeyDecodeError, SessionKeyDecode);
 
-pyo3::create_exception!(module, PickleException, pyo3::exceptions::PyException);
+pyo3::create_exception!(module, PickleException, pyo3::exceptions::PyValueError);
 pyo3::create_exception!(
     module,
     SessionCreationException,
-    pyo3::exceptions::PyException
+    pyo3::exceptions::PyValueError
 );
-pyo3::create_exception!(module, DecodeException, pyo3::exceptions::PyException);
-pyo3::create_exception!(module, SasException, pyo3::exceptions::PyException);
+pyo3::create_exception!(module, DecodeException, pyo3::exceptions::PyValueError);
+pyo3::create_exception!(module, SasException, pyo3::exceptions::PyValueError);
 pyo3::create_exception!(
     module,
     OlmDecryptionException,
-    pyo3::exceptions::PyException
+    pyo3::exceptions::PyValueError
 );
 pyo3::create_exception!(
     module,
     MegolmDecryptionException,
-    pyo3::exceptions::PyException
+    pyo3::exceptions::PyValueError
 );
 
 #[derive(Debug, Error)]
