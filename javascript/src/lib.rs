@@ -1,3 +1,5 @@
+#![allow(clippy::new_without_default)]
+
 mod account;
 mod group_sessions;
 mod sas;
