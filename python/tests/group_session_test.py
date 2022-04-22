@@ -97,7 +97,7 @@ class TestClass(object):
         with pytest.raises(TypeError):
             InboundGroupSession()
 
-    def test_oubtound_pickle_fail(self):
+    def test_outbound_pickle_fail(self):
         outbound = GroupSession()
         pickle_key = b"It's a secret to everybody 12345"
         pickle = outbound.pickle(pickle_key)

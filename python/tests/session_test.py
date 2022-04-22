@@ -85,9 +85,9 @@ class TestClass(object):
         (bob_session, decrypted) = bob.create_inbound_session(alice.curve25519_key, message)
         assert plaintext == decrypted
 
-        message_2nd = session.encrypt("Hey! Listen!")
+        message2 = session.encrypt("Hey! Listen!")
 
-        assert bob_session.session_matches(message_2nd) is True
+        assert bob_session.session_matches(message2) is True
 
     def test_invalid(self):
         alice, bob, session = self._create_session()
@@ -104,7 +104,7 @@ class TestClass(object):
         with pytest.raises(KeyException):
             alice.create_outbound_session("", "x")
 
-    def test_doesnt_match(self):
+    def test_does_not_match(self):
         plaintext = "It's a secret to everybody"
         alice, bob, session = self._create_session()
         message = session.encrypt(plaintext)
