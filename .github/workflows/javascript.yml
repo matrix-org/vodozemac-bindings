@@ -1,0 +1,37 @@
+name: Javascript tests
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  Test:
+    strategy:
+      matrix:
+        # Windows is missing from this list as wasm-pack didn't want to work
+        # on it. We should try to add it back at some point in the future.
+        os: [ubuntu-latest, macos-latest]
+        node: ['16']
+        include:
+          - os: ubuntu-latest
+            node: '14'
+          - os: ubuntu-latest
+            node: '12'
+    runs-on: "${{ matrix.os }}"
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v1
+      - run: npm install
+        working-directory: ./javascript
+      - run: npm install -g wasm-pack
+      - name: Run the tests
+        working-directory: ./javascript
+        run: npm test
