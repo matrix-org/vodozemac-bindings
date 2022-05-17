@@ -1,14 +1,11 @@
-use super::ffi::{OlmMessage, OneTimeKey};
-use super::Session;
+use super::{ffi::OneTimeKey, Curve25519PublicKey, Ed25519PublicKey, Ed25519Signature, Session};
 
-pub struct Account {
-    inner: vodozemac::olm::Account,
-}
+pub struct OlmMessage(pub(crate) vodozemac::olm::OlmMessage);
+
+pub struct Account(vodozemac::olm::Account);
 
 pub fn new_account() -> Box<Account> {
-    Box::new(Account {
-        inner: vodozemac::olm::Account::new(),
-    })
+    Account(vodozemac::olm::Account::new()).into()
 }
 
 pub struct InboundCreationResult {
@@ -26,84 +23,71 @@ impl From<vodozemac::olm::InboundCreationResult> for InboundCreationResult {
 }
 
 impl Account {
-    pub fn ed25519_key(&self) -> &str {
-        self.inner.ed25519_key_encoded()
+    pub fn ed25519_key(&self) -> Box<Ed25519PublicKey> {
+        Ed25519PublicKey(self.0.ed25519_key()).into()
     }
 
-    pub fn curve25519_key(&self) -> &str {
-        self.inner.curve25519_key_encoded()
+    pub fn curve25519_key(&self) -> Box<Curve25519PublicKey> {
+        Curve25519PublicKey(*self.0.curve25519_key()).into()
     }
 
-    pub fn sign(&self, message: &str) -> String {
-        self.inner.sign(message)
+    pub fn sign(&self, message: &str) -> Box<Ed25519Signature> {
+        Ed25519Signature(self.0.sign(message)).into()
     }
 
     pub fn generate_one_time_keys(&mut self, count: usize) {
-        self.inner.generate_one_time_keys(count)
+        self.0.generate_one_time_keys(count)
     }
 
     pub fn one_time_keys(&self) -> Vec<OneTimeKey> {
-        self.inner
-            .one_time_keys_encoded()
+        self.0
+            .one_time_keys()
             .into_iter()
-            .map(|(key_id, key)| OneTimeKey { key_id, key })
+            .map(|(key_id, key)| OneTimeKey {
+                key_id: key_id.to_base64(),
+                key: Box::new(Curve25519PublicKey(key)),
+            })
             .collect()
     }
 
     pub fn generate_fallback_key(&mut self) {
-        self.inner.generate_fallback_key()
+        self.0.generate_fallback_key()
     }
 
     pub fn fallback_key(&self) -> Vec<OneTimeKey> {
-        self.inner
+        self.0
             .fallback_key()
             .into_iter()
             .map(|(key_id, key)| OneTimeKey {
                 key_id: key_id.to_base64(),
-                key,
+                key: Box::new(Curve25519PublicKey(key)),
             })
             .collect()
     }
 
     pub fn mark_keys_as_published(&mut self) {
-        self.inner.mark_keys_as_published()
+        self.0.mark_keys_as_published()
     }
 
     pub fn create_outbound_session(
         &self,
-        identity_key: &str,
-        one_time_key: &str,
-    ) -> Result<Box<Session>, vodozemac::Curve25519KeyError> {
-        let identity_key = vodozemac::Curve25519PublicKey::from_base64(identity_key)?;
-        let one_time_key = vodozemac::Curve25519PublicKey::from_base64(one_time_key)?;
-
+        identity_key: &Curve25519PublicKey,
+        one_time_key: &Curve25519PublicKey,
+    ) -> Result<Box<Session>, vodozemac::KeyError> {
         let session = self
-            .inner
-            .create_outbound_session(identity_key, one_time_key);
+            .0
+            .create_outbound_session(identity_key.0, one_time_key.0);
 
         Ok(Box::new(Session { inner: session }))
     }
 
     pub fn create_inbound_session(
         &mut self,
-        identity_key: &str,
-        message: OlmMessage,
+        identity_key: &Curve25519PublicKey,
+        message: &OlmMessage,
     ) -> Result<Box<InboundCreationResult>, anyhow::Error> {
-        let message = vodozemac::olm::OlmMessage::from_type_and_ciphertext(
-            message.message_type,
-            message.ciphertext,
-        )
-        .map_err(|_| {
-            anyhow::anyhow!(
-                "Invalid message type, got {}, expected 0 or 1",
-                message.message_type
-            )
-        })?;
-
-        if let vodozemac::olm::OlmMessage::PreKey(m) = message {
-            let identity_key = vodozemac::Curve25519PublicKey::from_base64(identity_key)?;
-
-            let result = self.inner.create_inbound_session(&identity_key, &m)?;
+        if let vodozemac::olm::OlmMessage::PreKey(m) = &message.0 {
+            let result = self.0.create_inbound_session(&identity_key.0, &m)?;
 
             Ok(Box::new(result.into()))
         } else {

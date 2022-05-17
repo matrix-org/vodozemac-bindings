@@ -1,11 +1,13 @@
+use super::Curve25519PublicKey;
+
 pub struct Sas {
     inner: Option<vodozemac::sas::Sas>,
-    public_key: String,
+    public_key: vodozemac::Curve25519PublicKey,
 }
 
 pub fn new_sas() -> Box<Sas> {
     let sas = vodozemac::sas::Sas::new();
-    let public_key = sas.public_key_encoded().to_owned();
+    let public_key = sas.public_key();
 
     Box::new(Sas {
         inner: Some(sas),
@@ -14,16 +16,16 @@ pub fn new_sas() -> Box<Sas> {
 }
 
 impl Sas {
-    pub fn public_key(&self) -> &str {
-        &self.public_key
+    pub fn public_key(&self) -> Box<Curve25519PublicKey> {
+        Curve25519PublicKey(self.public_key).into()
     }
 
     pub fn diffie_hellman(
         &mut self,
-        other_public_key: &str,
+        other_public_key: &Curve25519PublicKey,
     ) -> Result<Box<EstablishedSas>, anyhow::Error> {
         if let Some(sas) = self.inner.take() {
-            let sas = sas.diffie_hellman_with_raw(other_public_key)?;
+            let sas = sas.diffie_hellman(other_public_key.0)?;
 
             Ok(Box::new(EstablishedSas { inner: sas }))
         } else {
@@ -31,6 +33,8 @@ impl Sas {
         }
     }
 }
+
+pub struct Mac(vodozemac::sas::Mac);
 
 pub struct EstablishedSas {
     inner: vodozemac::sas::EstablishedSas,
@@ -43,17 +47,17 @@ impl EstablishedSas {
         })
     }
 
-    pub fn calculate_mac(&self, input: &str, info: &str) -> String {
-        self.inner.calculate_mac(input, info)
+    pub fn calculate_mac(&self, input: &str, info: &str) -> Box<Mac> {
+        Mac(self.inner.calculate_mac(input, info)).into()
     }
 
     pub fn verify_mac(
         &self,
         input: &str,
         info: &str,
-        tag: &str,
+        tag: &Mac,
     ) -> Result<(), vodozemac::sas::SasError> {
-        self.inner.verify_mac(input, info, tag)
+        self.inner.verify_mac(input, info, &tag.0)
     }
 }
 
