@@ -78,12 +78,12 @@ impl Account {
 
     #[wasm_bindgen(method, getter)]
     pub fn ed25519_key(&self) -> String {
-        self.inner.ed25519_key_encoded().to_owned()
+        self.inner.ed25519_key().to_base64()
     }
 
     #[wasm_bindgen(method, getter)]
     pub fn curve25519_key(&self) -> String {
-        self.inner.curve25519_key_encoded().to_owned()
+        self.inner.curve25519_key().to_base64()
     }
 
     pub fn sign(&self, message: &str) -> String {
@@ -97,7 +97,12 @@ impl Account {
 
     #[wasm_bindgen(method, getter)]
     pub fn one_time_keys(&self) -> Result<JsValue, JsValue> {
-        let keys = self.inner.one_time_keys_encoded();
+        let keys: HashMap<_, _> = self
+            .inner
+            .one_time_keys()
+            .into_iter()
+            .map(|(k, v)| (k.to_base64(), v.to_base64()))
+            .collect();
 
         Ok(serde_wasm_bindgen::to_value(&keys)?)
     }
@@ -157,7 +162,7 @@ impl Account {
         if let vodozemac::olm::OlmMessage::PreKey(message) = message {
             Ok(self
                 .inner
-                .create_inbound_session(&identity_key, &message)
+                .create_inbound_session(identity_key, &message)
                 .map_err(error_to_js)?
                 .into())
         } else {

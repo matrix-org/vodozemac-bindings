@@ -53,13 +53,13 @@ impl Account {
     }
 
     #[getter]
-    fn ed25519_key(&self) -> &str {
-        self.inner.ed25519_key_encoded()
+    fn ed25519_key(&self) -> String {
+        self.inner.ed25519_key().to_base64()
     }
 
     #[getter]
-    fn curve25519_key(&self) -> &str {
-        self.inner.curve25519_key_encoded()
+    fn curve25519_key(&self) -> String {
+        self.inner.curve25519_key().to_base64()
     }
 
     fn sign(&self, message: &str) -> String {
@@ -68,7 +68,11 @@ impl Account {
 
     #[getter]
     fn one_time_keys(&self) -> HashMap<String, String> {
-        self.inner.one_time_keys_encoded()
+        self.inner
+            .one_time_keys()
+            .into_iter()
+            .map(|(k, v)| (k.to_base64(), v.to_base64()))
+            .collect()
     }
 
     #[getter]
@@ -123,7 +127,7 @@ impl Account {
             vodozemac::olm::OlmMessage::from_parts(message.message_type, &message.ciphertext)?;
 
         if let vodozemac::olm::OlmMessage::PreKey(message) = message {
-            let result = self.inner.create_inbound_session(&identity_key, &message)?;
+            let result = self.inner.create_inbound_session(identity_key, &message)?;
 
             Ok((
                 Session {
