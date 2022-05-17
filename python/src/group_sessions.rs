@@ -18,7 +18,7 @@ impl GroupSession {
     }
 
     #[getter]
-    fn session_id(&self) -> &str {
+    fn session_id(&self) -> String {
         self.inner.session_id()
     }
 

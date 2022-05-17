@@ -20,7 +20,7 @@ impl GroupSession {
 
     #[wasm_bindgen(getter)]
     pub fn session_id(&self) -> String {
-        self.inner.session_id().to_owned()
+        self.inner.session_id()
     }
 
     #[wasm_bindgen(getter)]

@@ -18,7 +18,7 @@ impl Sas {
 
     #[wasm_bindgen(getter)]
     pub fn public_key(&self) -> String {
-        self.inner.public_key_encoded().to_owned()
+        self.inner.public_key().to_base64()
     }
 
     pub fn diffie_hellman(self, key: &str) -> Result<EstablishedSas, JsValue> {
