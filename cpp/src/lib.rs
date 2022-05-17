@@ -3,10 +3,13 @@ mod sas;
 mod session;
 mod types;
 
-use account::{new_account, Account, InboundCreationResult, OlmMessage};
+use account::{account_from_pickle, new_account, Account, InboundCreationResult, OlmMessage};
 use sas::{new_sas, EstablishedSas, Mac, Sas, SasBytes};
 use session::Session;
-use types::{Curve25519PublicKey, Ed25519PublicKey, Ed25519Signature};
+use types::{
+    curve_key_from_base64, ed25519_key_from_base64, Curve25519PublicKey, Ed25519PublicKey,
+    Ed25519Signature,
+};
 
 #[cxx::bridge]
 mod ffi {
@@ -32,7 +35,11 @@ mod ffi {
     #[namespace = "types"]
     extern "Rust" {
         type Curve25519PublicKey;
+        fn curve_key_from_base64(key: &str) -> Result<Box<Curve25519PublicKey>>;
+        fn to_base64(self: &Curve25519PublicKey) -> String;
         type Ed25519PublicKey;
+        fn ed25519_key_from_base64(key: &str) -> Result<Box<Ed25519PublicKey>>;
+        fn to_base64(self: &Ed25519PublicKey) -> String;
         type Ed25519Signature;
     }
 
@@ -49,6 +56,9 @@ mod ffi {
         fn generate_fallback_key(self: &mut Account);
         fn fallback_key(self: &Account) -> Vec<OneTimeKey>;
         fn mark_keys_as_published(self: &mut Account);
+        fn max_number_of_one_time_keys(self: &Account) -> usize;
+        fn account_from_pickle(pickle: &str, pickle_key: &[u8; 32]) -> Result<Box<Account>>;
+        fn pickle(self: &Account, pickle_key: &[u8; 32]) -> String;
         fn create_outbound_session(
             self: &Account,
             identity_key: &Curve25519PublicKey,

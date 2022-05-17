@@ -8,6 +8,11 @@ pub fn new_account() -> Box<Account> {
     Account(vodozemac::olm::Account::new()).into()
 }
 
+pub fn account_from_pickle(pickle: &str, pickle_key: &[u8; 32]) -> Result<Box<Account>, anyhow::Error> {
+    let pickle = vodozemac::olm::AccountPickle::from_encrypted(pickle, pickle_key)?;
+    Ok(Account(vodozemac::olm::Account::from_pickle(pickle)).into())
+}
+
 pub struct InboundCreationResult {
     pub session: Session,
     pub plaintext: String,
@@ -28,7 +33,7 @@ impl Account {
     }
 
     pub fn curve25519_key(&self) -> Box<Curve25519PublicKey> {
-        Curve25519PublicKey(*self.0.curve25519_key()).into()
+        Curve25519PublicKey(self.0.curve25519_key()).into()
     }
 
     pub fn sign(&self, message: &str) -> Box<Ed25519Signature> {
@@ -69,6 +74,10 @@ impl Account {
         self.0.mark_keys_as_published()
     }
 
+    pub fn max_number_of_one_time_keys(&self) -> usize {
+        self.0.max_number_of_one_time_keys()
+    }
+
     pub fn create_outbound_session(
         &self,
         identity_key: &Curve25519PublicKey,
@@ -87,11 +96,15 @@ impl Account {
         message: &OlmMessage,
     ) -> Result<Box<InboundCreationResult>, anyhow::Error> {
         if let vodozemac::olm::OlmMessage::PreKey(m) = &message.0 {
-            let result = self.0.create_inbound_session(&identity_key.0, &m)?;
+            let result = self.0.create_inbound_session(identity_key.0, &m)?;
 
             Ok(Box::new(result.into()))
         } else {
             anyhow::bail!("Invalid message type, a pre-key message is required")
         }
+    }
+
+    pub fn pickle(&self, pickle_key: &[u8; 32]) -> String {
+        self.0.pickle().encrypt(pickle_key)
     }
 }
