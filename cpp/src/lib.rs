@@ -22,7 +22,7 @@ mod ffi {
     #[namespace = "olm"]
     struct OneTimeKey {
         key_id: String,
-        key: Box<Curve25519PublicKey>,
+        key: String,
     }
 
     #[namespace = "olm"]

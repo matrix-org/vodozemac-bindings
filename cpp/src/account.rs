@@ -50,7 +50,7 @@ impl Account {
             .into_iter()
             .map(|(key_id, key)| OneTimeKey {
                 key_id: key_id.to_base64(),
-                key: Box::new(Curve25519PublicKey(key)),
+                key: key.to_base64(),
             })
             .collect()
     }
@@ -65,7 +65,7 @@ impl Account {
             .into_iter()
             .map(|(key_id, key)| OneTimeKey {
                 key_id: key_id.to_base64(),
-                key: Box::new(Curve25519PublicKey(key)),
+                key: key.to_base64(),
             })
             .collect()
     }
