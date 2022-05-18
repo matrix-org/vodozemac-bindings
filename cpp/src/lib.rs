@@ -3,9 +3,9 @@ mod sas;
 mod session;
 mod types;
 
-use account::{account_from_pickle, new_account, Account, InboundCreationResult, OlmMessage};
+use account::{account_from_pickle, new_account, Account, OlmMessage, olm_message_from_parts};
 use sas::{new_sas, EstablishedSas, Mac, Sas, SasBytes};
-use session::Session;
+use session::{session_from_pickle, Session};
 use types::{
     curve_key_from_base64, ed25519_key_from_base64, Curve25519PublicKey, Ed25519PublicKey,
     Ed25519Signature,
@@ -20,12 +20,19 @@ mod ffi {
     }
 
     #[namespace = "olm"]
-    struct OneTimeKey {
-        key_id: String,
-        key: String,
+    pub struct InboundCreationResult {
+        pub session: Box<Session>,
+        pub plaintext: String,
     }
 
     #[namespace = "olm"]
+    struct OneTimeKey {
+        key_id: String,
+        key: Box<Curve25519PublicKey>,
+    }
+
+    #[namespace = "olm"]
+    #[derive(PartialEq)]
     struct SessionKeys {
         identity_key: Box<Curve25519PublicKey>,
         base_key: Box<Curve25519PublicKey>,
@@ -46,7 +53,6 @@ mod ffi {
     #[namespace = "olm"]
     extern "Rust" {
         type Account;
-        type InboundCreationResult;
         fn new_account() -> Box<Account>;
         fn ed25519_key(self: &Account) -> Box<Ed25519PublicKey>;
         fn curve25519_key(self: &Account) -> Box<Curve25519PublicKey>;
@@ -68,14 +74,20 @@ mod ffi {
             self: &mut Account,
             identity_key: &Curve25519PublicKey,
             message: &OlmMessage,
-        ) -> Result<Box<InboundCreationResult>>;
+        ) -> Result<InboundCreationResult>;
 
         type Session;
         fn session_id(self: &Session) -> String;
+        fn session_keys(self: &Session) -> SessionKeys;
+        fn session_matches(self: &Session, message: &OlmMessage) -> bool;
         fn encrypt(self: &mut Session, plaintext: &str) -> Box<OlmMessage>;
         fn decrypt(self: &mut Session, message: &OlmMessage) -> Result<String>;
+        fn session_from_pickle(pickle: &str, pickle_key: &[u8; 32]) -> Result<Box<Session>>;
+        fn pickle(self: &Session, pickle_key: &[u8; 32]) -> String;
 
         type OlmMessage;
+        fn to_parts(self: &OlmMessage) -> OlmMessageParts;
+        fn olm_message_from_parts(parts: &OlmMessageParts) -> Result<Box<OlmMessage>>;
     }
 
     #[namespace = "sas"]

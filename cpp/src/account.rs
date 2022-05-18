@@ -1,6 +1,28 @@
-use super::{ffi::OneTimeKey, Curve25519PublicKey, Ed25519PublicKey, Ed25519Signature, Session};
+use super::{
+    ffi::{InboundCreationResult, OlmMessageParts, OneTimeKey},
+    Curve25519PublicKey, Ed25519PublicKey, Ed25519Signature, Session,
+};
 
 pub struct OlmMessage(pub(crate) vodozemac::olm::OlmMessage);
+
+impl OlmMessage {
+    pub fn to_parts(&self) -> OlmMessageParts {
+        let (message_type, ciphertext) = self.0.clone().to_parts();
+
+        OlmMessageParts {
+            ciphertext,
+            message_type,
+        }
+    }
+}
+
+pub fn olm_message_from_parts(parts: &OlmMessageParts) -> Result<Box<OlmMessage>, anyhow::Error> {
+    Ok(OlmMessage(vodozemac::olm::OlmMessage::from_parts(
+        parts.message_type,
+        &parts.ciphertext,
+    )?)
+    .into())
+}
 
 pub struct Account(vodozemac::olm::Account);
 
@@ -8,20 +30,18 @@ pub fn new_account() -> Box<Account> {
     Account(vodozemac::olm::Account::new()).into()
 }
 
-pub fn account_from_pickle(pickle: &str, pickle_key: &[u8; 32]) -> Result<Box<Account>, anyhow::Error> {
+pub fn account_from_pickle(
+    pickle: &str,
+    pickle_key: &[u8; 32],
+) -> Result<Box<Account>, anyhow::Error> {
     let pickle = vodozemac::olm::AccountPickle::from_encrypted(pickle, pickle_key)?;
     Ok(Account(vodozemac::olm::Account::from_pickle(pickle)).into())
-}
-
-pub struct InboundCreationResult {
-    pub session: Session,
-    pub plaintext: String,
 }
 
 impl From<vodozemac::olm::InboundCreationResult> for InboundCreationResult {
     fn from(v: vodozemac::olm::InboundCreationResult) -> Self {
         Self {
-            session: Session { inner: v.session },
+            session: Session(v.session).into(),
             plaintext: v.plaintext,
         }
     }
@@ -50,7 +70,7 @@ impl Account {
             .into_iter()
             .map(|(key_id, key)| OneTimeKey {
                 key_id: key_id.to_base64(),
-                key: key.to_base64(),
+                key: Curve25519PublicKey(key).into(),
             })
             .collect()
     }
@@ -65,7 +85,7 @@ impl Account {
             .into_iter()
             .map(|(key_id, key)| OneTimeKey {
                 key_id: key_id.to_base64(),
-                key: key.to_base64(),
+                key: Curve25519PublicKey(key).into(),
             })
             .collect()
     }
@@ -87,18 +107,18 @@ impl Account {
             .0
             .create_outbound_session(identity_key.0, one_time_key.0);
 
-        Ok(Box::new(Session { inner: session }))
+        Ok(Box::new(Session(session)))
     }
 
     pub fn create_inbound_session(
         &mut self,
         identity_key: &Curve25519PublicKey,
         message: &OlmMessage,
-    ) -> Result<Box<InboundCreationResult>, anyhow::Error> {
+    ) -> Result<InboundCreationResult, anyhow::Error> {
         if let vodozemac::olm::OlmMessage::PreKey(m) = &message.0 {
             let result = self.0.create_inbound_session(identity_key.0, &m)?;
 
-            Ok(Box::new(result.into()))
+            Ok(result.into())
         } else {
             anyhow::bail!("Invalid message type, a pre-key message is required")
         }
