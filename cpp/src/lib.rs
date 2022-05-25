@@ -1,9 +1,16 @@
 mod account;
+mod group_sessions;
 mod sas;
 mod session;
 mod types;
 
 use account::{account_from_pickle, new_account, olm_message_from_parts, Account, OlmMessage};
+use group_sessions::{
+    exported_session_key_from_base64, group_session_from_pickle, import_inbound_group_session,
+    inbound_group_session_from_pickle, megolm_message_from_base64, new_group_session,
+    new_inbound_group_session, session_key_from_base64, ExportedSessionKey, GroupSession,
+    InboundGroupSession, MegolmMessage, SessionKey,
+};
 use sas::{mac_from_base64, new_sas, EstablishedSas, Mac, Sas, SasBytes};
 use session::{session_from_pickle, Session};
 use types::{
@@ -88,6 +95,60 @@ mod ffi {
         type OlmMessage;
         fn to_parts(self: &OlmMessage) -> OlmMessageParts;
         fn olm_message_from_parts(parts: &OlmMessageParts) -> Result<Box<OlmMessage>>;
+    }
+
+    #[namespace = "megolm"]
+    struct DecryptedMessage {
+        plaintext: String,
+        message_index: u32,
+    }
+
+    #[namespace = "megolm"]
+    extern "Rust" {
+        type MegolmMessage;
+        fn megolm_message_from_base64(message: &str) -> Result<Box<MegolmMessage>>;
+        fn to_base64(self: &MegolmMessage) -> String;
+
+        type SessionKey;
+        fn session_key_from_base64(key: &str) -> Result<Box<SessionKey>>;
+        fn to_base64(self: &SessionKey) -> String;
+
+        type ExportedSessionKey;
+        fn exported_session_key_from_base64(key: &str) -> Result<Box<ExportedSessionKey>>;
+        fn to_base64(self: &ExportedSessionKey) -> String;
+
+        type GroupSession;
+        fn new_group_session() -> Box<GroupSession>;
+        fn encrypt(self: &mut GroupSession, plaintext: &str) -> Box<MegolmMessage>;
+        fn session_id(self: &GroupSession) -> String;
+        fn session_key(self: &GroupSession) -> Box<SessionKey>;
+        fn message_index(self: &GroupSession) -> u32;
+        fn pickle(self: &GroupSession, pickle_key: &[u8; 32]) -> String;
+        fn group_session_from_pickle(
+            pickle: &str,
+            pickle_key: &[u8; 32],
+        ) -> Result<Box<GroupSession>>;
+
+        type InboundGroupSession;
+        fn new_inbound_group_session(session_key: &SessionKey) -> Box<InboundGroupSession>;
+        fn import_inbound_group_session(
+            session_key: &ExportedSessionKey,
+        ) -> Box<InboundGroupSession>;
+        fn decrypt(
+            self: &mut InboundGroupSession,
+            message: &MegolmMessage,
+        ) -> Result<DecryptedMessage>;
+        fn session_id(self: &InboundGroupSession) -> String;
+        fn first_known_index(self: &InboundGroupSession) -> u32;
+        fn export_at(
+            self: &mut InboundGroupSession,
+            message_index: u32,
+        ) -> Result<Box<ExportedSessionKey>>;
+        fn pickle(self: &InboundGroupSession, pickle_key: &[u8; 32]) -> String;
+        fn inbound_group_session_from_pickle(
+            pickle: &str,
+            pickle_key: &[u8; 32],
+        ) -> Result<Box<InboundGroupSession>>;
     }
 
     #[namespace = "sas"]

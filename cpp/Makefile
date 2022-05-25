@@ -38,9 +38,20 @@ sas-test: rust-lib tests/sas.cpp
 		-l vodozemac 		\
 		-o sas-test
 
+group-session-test: rust-lib tests/group_session.cpp
+	g++ 				\
+		-Wall -g 		\
+		-pthread -std=c++17	\
+		tests/group_session.cpp	\
+		-lgtest_main -lgtest 	\
+		-lpthread 		\
+		-I ../target/cxxbridge 	\
+		-L ../target/debug/ 	\
+		-l vodozemac 		\
 		-o group-session-test
 
-test: account-test session-test sas-test
+test: account-test session-test sas-test group-session-test
 	./account-test --gtest_color=yes
 	./session-test --gtest_color=yes
 	./sas-test --gtest_color=yes
+	./group-session-test --gtest_color=yes
