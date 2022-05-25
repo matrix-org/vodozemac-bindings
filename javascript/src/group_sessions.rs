@@ -135,7 +135,7 @@ impl InboundGroupSession {
 
     pub fn from_libolm_pickle(
         pickle: &str,
-        pickle_key: &str,
+        pickle_key: &[u8],
     ) -> Result<InboundGroupSession, JsValue> {
         let inner = vodozemac::megolm::InboundGroupSession::from_libolm_pickle(pickle, pickle_key)
             .map_err(error_to_js)?;

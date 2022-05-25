@@ -53,7 +53,8 @@ describe('Olm Account', function() {
                               "3lPGpil0cuEuGTTjKHXGRu9kpnQe99QGCB4KBuP5IJjFeW" +
                               "btSgJ4ZrajZdlTew"
 
-        let account = Account.from_libolm_pickle(libolm_pickle, "It's a secret to everybody");
+        let pickle_key = Buffer.from("It's a secret to everybody");
+        let account = Account.from_libolm_pickle(libolm_pickle, pickle_key);
 
         expect(account.ed25519_key).toEqual("MEQCwaTE/gcrHaxwv06WEVy5xDA30FboFzCAtYhzmoc")
     });

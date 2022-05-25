@@ -9,7 +9,7 @@ crate-type = ["cdylib"]
 
 [dependencies.vodozemac]
 git = "https://github.com/matrix-org/vodozemac"
-rev = "85147d156e50e1fcb6303745708c2e173b925637"
+rev = "d0e744287a14319c2a9148fef3747548c740fc36"
 features = ["js"]
 
 [dependencies]

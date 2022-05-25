@@ -31,7 +31,7 @@ impl Session {
         Ok(Self { inner: session })
     }
 
-    pub fn from_libolm_pickle(pickle: &str, pickle_key: &str) -> Result<Session, JsValue> {
+    pub fn from_libolm_pickle(pickle: &str, pickle_key: &[u8]) -> Result<Session, JsValue> {
         let session =
             vodozemac::olm::Session::from_libolm_pickle(pickle, pickle_key).map_err(error_to_js)?;
 

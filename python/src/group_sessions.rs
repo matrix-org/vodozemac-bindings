@@ -139,7 +139,7 @@ impl InboundGroupSession {
     fn from_libolm_pickle(
         _cls: &PyType,
         pickle: &str,
-        pickle_key: &str,
+        pickle_key: &[u8],
     ) -> Result<Self, LibolmPickleError> {
         let inner = vodozemac::megolm::InboundGroupSession::from_libolm_pickle(pickle, pickle_key)?;
 

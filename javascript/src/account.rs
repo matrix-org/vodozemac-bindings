@@ -61,7 +61,7 @@ impl Account {
         Ok(Self { inner })
     }
 
-    pub fn from_libolm_pickle(pickle: &str, pickle_key: &str) -> Result<Account, JsValue> {
+    pub fn from_libolm_pickle(pickle: &str, pickle_key: &[u8]) -> Result<Account, JsValue> {
         let inner =
             vodozemac::olm::Account::from_libolm_pickle(pickle, pickle_key).map_err(error_to_js)?;
 

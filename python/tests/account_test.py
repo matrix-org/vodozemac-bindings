@@ -34,7 +34,7 @@ class TestClass(object):
                 "03lPGpil0cuEuGTTjKHXGRu9kpnQe99QGCB4KBuP5IJjFeWbtSgJ4ZrajZdlTew"
         )
 
-        unpickled = Account.from_libolm_pickle(pickle, "It's a secret to everybody")
+        unpickled = Account.from_libolm_pickle(pickle, b"It's a secret to everybody")
 
         assert unpickled.ed25519_key == "MEQCwaTE/gcrHaxwv06WEVy5xDA30FboFzCAtYhzmoc"
 
