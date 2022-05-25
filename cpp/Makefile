@@ -14,7 +14,7 @@ account-test: rust-lib tests/account.cpp
 		-o account-test
 	
 
-session-test: rust-lib tests/account.cpp
+session-test: rust-lib tests/session.cpp
 	g++ 				\
 		-Wall -g 		\
 		-pthread -std=c++17	\
@@ -26,6 +26,21 @@ session-test: rust-lib tests/account.cpp
 		-l vodozemac 		\
 		-o session-test
 
-test: account-test session-test
+sas-test: rust-lib tests/sas.cpp
+	g++ 				\
+		-Wall -g 		\
+		-pthread -std=c++17	\
+		tests/sas.cpp 		\
+		-lgtest_main -lgtest 	\
+		-lpthread 		\
+		-I ../target/cxxbridge 	\
+		-L ../target/debug/ 	\
+		-l vodozemac 		\
+		-o sas-test
+
+		-o group-session-test
+
+test: account-test session-test sas-test
 	./account-test --gtest_color=yes
 	./session-test --gtest_color=yes
+	./sas-test --gtest_color=yes

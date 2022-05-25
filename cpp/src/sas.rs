@@ -36,6 +36,16 @@ impl Sas {
 
 pub struct Mac(vodozemac::sas::Mac);
 
+pub fn mac_from_base64(mac: &str) -> Result<Box<Mac>, anyhow::Error> {
+    Ok(Mac(vodozemac::sas::Mac::from_base64(mac)?).into())
+}
+
+impl Mac {
+    pub fn to_base64(&self) -> String {
+        self.0.to_base64()
+    }
+}
+
 pub struct EstablishedSas {
     inner: vodozemac::sas::EstablishedSas,
 }

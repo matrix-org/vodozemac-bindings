@@ -43,7 +43,6 @@ describe('Megolm Session', function() {
         expect(session.session_id).toEqual(unpickled.session_id);
     });
 
-
     it('should throw an exception if unpickling fails', function() {
         expect(() => GroupSession.from_pickle("", PICKLE_KEY)).toThrow();
         expect(() => InboundGroupSession.from_pickle("", PICKLE_KEY)).toThrow();

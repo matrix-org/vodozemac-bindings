@@ -1,6 +1,5 @@
 #include "../../target/cxxbridge/vodozemac/src/lib.rs.h"
 #include "gtest/gtest.h"
-#include <tuple>
 
 using namespace rust;
 

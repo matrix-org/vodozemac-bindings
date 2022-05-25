@@ -7,4 +7,5 @@ javascript/yarn-error.log
 javascript/yarn.lock
 cpp/account-test
 cpp/session-test
+cpp/sas-test
 .ccls-cache

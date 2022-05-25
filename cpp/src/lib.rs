@@ -3,8 +3,8 @@ mod sas;
 mod session;
 mod types;
 
-use account::{account_from_pickle, new_account, Account, OlmMessage, olm_message_from_parts};
-use sas::{new_sas, EstablishedSas, Mac, Sas, SasBytes};
+use account::{account_from_pickle, new_account, olm_message_from_parts, Account, OlmMessage};
+use sas::{mac_from_base64, new_sas, EstablishedSas, Mac, Sas, SasBytes};
 use session::{session_from_pickle, Session};
 use types::{
     curve_key_from_base64, ed25519_key_from_base64, Curve25519PublicKey, Ed25519PublicKey,
@@ -93,6 +93,8 @@ mod ffi {
     #[namespace = "sas"]
     extern "Rust" {
         type Mac;
+        fn mac_from_base64(mac: &str) -> Result<Box<Mac>>;
+        fn to_base64(self: &Mac) -> String;
         type Sas;
         fn new_sas() -> Box<Sas>;
         fn public_key(self: &Sas) -> Box<Curve25519PublicKey>;
