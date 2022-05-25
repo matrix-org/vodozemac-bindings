@@ -39,7 +39,7 @@ mod ffi {
     }
 
     #[namespace = "olm"]
-    #[derive(PartialEq)]
+    #[derive(PartialEq, Eq)]
     struct SessionKeys {
         identity_key: Box<Curve25519PublicKey>,
         base_key: Box<Curve25519PublicKey>,

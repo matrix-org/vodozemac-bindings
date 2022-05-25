@@ -116,7 +116,7 @@ impl Account {
         message: &OlmMessage,
     ) -> Result<InboundCreationResult, anyhow::Error> {
         if let vodozemac::olm::OlmMessage::PreKey(m) = &message.0 {
-            let result = self.0.create_inbound_session(identity_key.0, &m)?;
+            let result = self.0.create_inbound_session(identity_key.0, m)?;
 
             Ok(result.into())
         } else {

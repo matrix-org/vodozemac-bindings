@@ -116,7 +116,7 @@ impl InboundGroupSession {
             .export_at(index)
             .map(ExportedSessionKey)
             .map(Box::new)
-            .ok_or(anyhow!("Unknown message index"))
+            .ok_or_else(|| anyhow!("Unknown message index"))
     }
 
     pub fn decrypt(&mut self, message: &MegolmMessage) -> Result<DecryptedMessage> {
