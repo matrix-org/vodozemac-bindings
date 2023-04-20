@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use pyo3::{prelude::*, types::PyType};
+use vodozemac::olm::SessionConfig;
 
 use crate::error::{KeyError, LibolmPickleError, PickleError, SessionError};
 
@@ -109,9 +110,9 @@ impl Account {
         let identity_key = vodozemac::Curve25519PublicKey::from_base64(identity_key)?;
         let one_time_key = vodozemac::Curve25519PublicKey::from_base64(one_time_key)?;
 
-        let session = self
-            .inner
-            .create_outbound_session(identity_key, one_time_key);
+        let session =
+            self.inner
+                .create_outbound_session(SessionConfig::version_1(), identity_key, one_time_key);
 
         Ok(Session { inner: session })
     }
@@ -133,7 +134,7 @@ impl Account {
                 Session {
                     inner: result.session,
                 },
-                result.plaintext,
+                String::from_utf8_lossy(&result.plaintext).to_string(),
             ))
         } else {
             Err(SessionError::InvalidMessageType)

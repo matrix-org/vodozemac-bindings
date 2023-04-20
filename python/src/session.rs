@@ -78,6 +78,6 @@ impl Session {
         let message =
             vodozemac::olm::OlmMessage::from_parts(message.message_type, &message.ciphertext)?;
 
-        Ok(self.inner.decrypt(&message)?)
+        Ok(String::from_utf8_lossy(&self.inner.decrypt(&message)?).to_string())
     }
 }

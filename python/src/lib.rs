@@ -1,8 +1,10 @@
 mod account;
 mod error;
 mod group_sessions;
+mod identity_keys;
 mod sas;
 mod session;
+mod session_key;
 
 use error::*;
 use pyo3::prelude::*;
@@ -35,6 +37,11 @@ fn mymodule(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<sas::Sas>()?;
     m.add_class::<group_sessions::GroupSession>()?;
     m.add_class::<group_sessions::InboundGroupSession>()?;
+    m.add_class::<session_key::SessionKey>()?;
+    m.add_class::<session_key::ExportedSessionKey>()?;
+    m.add_class::<identity_keys::Ed25519Signature>()?;
+    m.add_class::<identity_keys::Ed25519PublicKey>()?;
+    m.add_class::<identity_keys::Curve25519PublicKey>()?;
 
     m.add("KeyException", py.get_type::<KeyException>())?;
     m.add("DecodeException", py.get_type::<DecodeException>())?;
