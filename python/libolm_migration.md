@@ -43,4 +43,4 @@ Vodozemac does not yet support:
 - the `sha256` function (Python's standard
   [`sha256`](https://docs.python.org/3/library/hashlib.html#hashlib.sha256)
   function can be used instead, but note that libolm's `sha256` function
-  base64-encoded, while Python's does not).
+  base64-encodes its output, while Python's does not).
