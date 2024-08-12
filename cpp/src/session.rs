@@ -15,7 +15,7 @@ impl Session {
         OlmMessage(self.0.encrypt(plaintext)).into()
     }
 
-    pub fn decrypt(&mut self, message: &OlmMessage) -> Result<String, anyhow::Error> {
+    pub fn decrypt(&mut self, message: &OlmMessage) -> Result<Vec<u8>, anyhow::Error> {
         Ok(self.0.decrypt(&message.0)?)
     }
 
@@ -45,3 +45,5 @@ pub fn session_from_pickle(
     let pickle = vodozemac::olm::SessionPickle::from_encrypted(pickle, pickle_key)?;
     Ok(Session(vodozemac::olm::Session::from_pickle(pickle)).into())
 }
+
+pub struct SessionConfig(pub(crate) vodozemac::olm::SessionConfig);

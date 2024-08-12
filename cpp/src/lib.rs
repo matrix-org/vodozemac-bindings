@@ -4,15 +4,15 @@ mod sas;
 mod session;
 mod types;
 
-use account::{account_from_pickle, new_account, olm_message_from_parts, Account, OlmMessage};
+use account::{account_from_pickle, new_account, olm_message_from_parts, Account, OlmMessage, OneTimeKeyGenerationResult,};
 use group_sessions::{
     exported_session_key_from_base64, group_session_from_pickle, import_inbound_group_session,
     inbound_group_session_from_pickle, megolm_message_from_base64, new_group_session,
     new_inbound_group_session, session_key_from_base64, ExportedSessionKey, GroupSession,
-    InboundGroupSession, MegolmMessage, SessionKey,
+    InboundGroupSession, MegolmMessage, SessionKey, SessionConfig as GroupSessionConfig,
 };
 use sas::{mac_from_base64, new_sas, EstablishedSas, Mac, Sas, SasBytes};
-use session::{session_from_pickle, Session};
+use session::{session_from_pickle, Session, SessionConfig,};
 use types::{
     curve_key_from_base64, ed25519_key_from_base64, Curve25519PublicKey, Ed25519PublicKey,
     Ed25519Signature,
@@ -29,7 +29,7 @@ mod ffi {
     #[namespace = "olm"]
     pub struct InboundCreationResult {
         pub session: Box<Session>,
-        pub plaintext: String,
+        pub plaintext: Vec<u8>,
     }
 
     #[namespace = "olm"]
@@ -64,9 +64,9 @@ mod ffi {
         fn ed25519_key(self: &Account) -> Box<Ed25519PublicKey>;
         fn curve25519_key(self: &Account) -> Box<Curve25519PublicKey>;
         fn sign(self: &Account, message: &str) -> Box<Ed25519Signature>;
-        fn generate_one_time_keys(self: &mut Account, count: usize);
+        fn generate_one_time_keys(self: &mut Account, count: usize) -> Box<OneTimeKeyGenerationResult>;
         fn one_time_keys(self: &Account) -> Vec<OneTimeKey>;
-        fn generate_fallback_key(self: &mut Account);
+        fn generate_fallback_key(self: &mut Account) -> Vec<Curve25519PublicKey>;
         fn fallback_key(self: &Account) -> Vec<OneTimeKey>;
         fn mark_keys_as_published(self: &mut Account);
         fn max_number_of_one_time_keys(self: &Account) -> usize;
@@ -74,6 +74,7 @@ mod ffi {
         fn pickle(self: &Account, pickle_key: &[u8; 32]) -> String;
         fn create_outbound_session(
             self: &Account,
+            session_config: &SessionConfig,
             identity_key: &Curve25519PublicKey,
             one_time_key: &Curve25519PublicKey,
         ) -> Result<Box<Session>>;
@@ -83,12 +84,18 @@ mod ffi {
             message: &OlmMessage,
         ) -> Result<InboundCreationResult>;
 
+        type OneTimeKeyGenerationResult;
+        fn created(self: &OneTimeKeyGenerationResult) -> Vec<Curve25519PublicKey>;
+        fn removed(self: &OneTimeKeyGenerationResult) -> Vec<Curve25519PublicKey>;
+
+        type SessionConfig;
+
         type Session;
         fn session_id(self: &Session) -> String;
         fn session_keys(self: &Session) -> SessionKeys;
         fn session_matches(self: &Session, message: &OlmMessage) -> bool;
         fn encrypt(self: &mut Session, plaintext: &str) -> Box<OlmMessage>;
-        fn decrypt(self: &mut Session, message: &OlmMessage) -> Result<String>;
+        fn decrypt(self: &mut Session, message: &OlmMessage) -> Result<Vec<u8>>;
         fn session_from_pickle(pickle: &str, pickle_key: &[u8; 32]) -> Result<Box<Session>>;
         fn pickle(self: &Session, pickle_key: &[u8; 32]) -> String;
 
@@ -99,7 +106,7 @@ mod ffi {
 
     #[namespace = "megolm"]
     struct DecryptedMessage {
-        plaintext: String,
+        plaintext: Vec<u8>,
         message_index: u32,
     }
 
@@ -117,8 +124,10 @@ mod ffi {
         fn exported_session_key_from_base64(key: &str) -> Result<Box<ExportedSessionKey>>;
         fn to_base64(self: &ExportedSessionKey) -> String;
 
+        type GroupSessionConfig;
+
         type GroupSession;
-        fn new_group_session() -> Box<GroupSession>;
+        fn new_group_session(session_config: &GroupSessionConfig) -> Box<GroupSession>;
         fn encrypt(self: &mut GroupSession, plaintext: &str) -> Box<MegolmMessage>;
         fn session_id(self: &GroupSession) -> String;
         fn session_key(self: &GroupSession) -> Box<SessionKey>;
@@ -130,9 +139,10 @@ mod ffi {
         ) -> Result<Box<GroupSession>>;
 
         type InboundGroupSession;
-        fn new_inbound_group_session(session_key: &SessionKey) -> Box<InboundGroupSession>;
+        fn new_inbound_group_session(session_key: &SessionKey, session_config: &GroupSessionConfig) -> Box<InboundGroupSession>;
         fn import_inbound_group_session(
             session_key: &ExportedSessionKey,
+            session_config: &GroupSessionConfig,
         ) -> Box<InboundGroupSession>;
         fn decrypt(
             self: &mut InboundGroupSession,

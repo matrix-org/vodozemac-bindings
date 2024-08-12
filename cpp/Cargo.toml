@@ -1,6 +1,6 @@
 [package]
 name = "vodozemac-cpp"
-version = "0.1.0"
+version = "0.7.0"
 edition = "2021"
 
 [lib]
@@ -13,7 +13,8 @@ cxx = "1.0"
 
 [dependencies.vodozemac]
 git = "https://github.com/matrix-org/vodozemac/"
-rev = "ce21316266fabaa3717363d5f410fb7943ecdb10"
+#rev = "ce21316266fabaa3717363d5f410fb7943ecdb10"
+rev = "92d6acca73b619a28440003f22c89b4127dd3fdb"
 
 [build-dependencies]
 cxx-build = "1.0"

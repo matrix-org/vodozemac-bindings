@@ -1,6 +1,6 @@
 use super::{
     ffi::{InboundCreationResult, OlmMessageParts, OneTimeKey},
-    Curve25519PublicKey, Ed25519PublicKey, Ed25519Signature, Session,
+    Curve25519PublicKey, Ed25519PublicKey, Ed25519Signature, Session, SessionConfig
 };
 
 pub struct OlmMessage(pub(crate) vodozemac::olm::OlmMessage);
@@ -22,6 +22,17 @@ pub fn olm_message_from_parts(parts: &OlmMessageParts) -> Result<Box<OlmMessage>
         &parts.ciphertext,
     )?)
     .into())
+}
+
+pub struct OneTimeKeyGenerationResult(vodozemac::olm::OneTimeKeyGenerationResult);
+
+impl OneTimeKeyGenerationResult {
+    pub fn created(self: &Self) -> Vec<Curve25519PublicKey> {
+        self.0.created.iter().map(|key| Curve25519PublicKey(*key)).collect()
+    }
+    pub fn removed(self: &Self) -> Vec<Curve25519PublicKey> {
+        self.0.removed.iter().map(|key| Curve25519PublicKey(*key)).collect()
+    }
 }
 
 pub struct Account(vodozemac::olm::Account);
@@ -60,8 +71,8 @@ impl Account {
         Ed25519Signature(self.0.sign(message)).into()
     }
 
-    pub fn generate_one_time_keys(&mut self, count: usize) {
-        self.0.generate_one_time_keys(count)
+    pub fn generate_one_time_keys(&mut self, count: usize) -> Box<OneTimeKeyGenerationResult> {
+        OneTimeKeyGenerationResult(self.0.generate_one_time_keys(count)).into()
     }
 
     pub fn one_time_keys(&self) -> Vec<OneTimeKey> {
@@ -75,8 +86,14 @@ impl Account {
             .collect()
     }
 
-    pub fn generate_fallback_key(&mut self) {
-        self.0.generate_fallback_key()
+    // cxx bridge does not support Option yet, that's why we are returning a vector
+    // of length either 0 or 1.
+    pub fn generate_fallback_key(&mut self) -> Vec<Curve25519PublicKey> {
+        let mut result = Vec::new();
+        if let Some(key) = self.0.generate_fallback_key() {
+            result.push(Curve25519PublicKey(key));
+        }
+        result
     }
 
     pub fn fallback_key(&self) -> Vec<OneTimeKey> {
@@ -100,12 +117,13 @@ impl Account {
 
     pub fn create_outbound_session(
         &self,
+        session_config: &SessionConfig,
         identity_key: &Curve25519PublicKey,
         one_time_key: &Curve25519PublicKey,
     ) -> Result<Box<Session>, vodozemac::KeyError> {
         let session = self
             .0
-            .create_outbound_session(identity_key.0, one_time_key.0);
+            .create_outbound_session(session_config.0, identity_key.0, one_time_key.0);
 
         Ok(Box::new(Session(session)))
     }
