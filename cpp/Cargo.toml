@@ -10,10 +10,7 @@ crate-type = ["staticlib"]
 [dependencies]
 anyhow = "1.0.42"
 cxx = "1.0"
-
-[dependencies.vodozemac]
-git = "https://github.com/matrix-org/vodozemac/"
-rev = "ce21316266fabaa3717363d5f410fb7943ecdb10"
+vodozemac = { workspace = true }
 
 [build-dependencies]
 cxx-build = "1.0"

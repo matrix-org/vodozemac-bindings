@@ -4,3 +4,7 @@ members = [
     "javascript",
     "python",
 ]
+resolver = "2"
+
+[workspace.dependencies]
+vodozemac = "0.7.0"
