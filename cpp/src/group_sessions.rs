@@ -1,11 +1,23 @@
 use super::ffi::DecryptedMessage;
 use anyhow::{anyhow, Result};
 
-pub struct SessionConfig(vodozemac::megolm::SessionConfig);
+pub struct MegolmSessionConfig(vodozemac::megolm::SessionConfig);
+
+pub fn megolm_session_config_version_1() -> Box<MegolmSessionConfig> {
+    MegolmSessionConfig(vodozemac::megolm::SessionConfig::version_1()).into()
+}
+
+pub fn megolm_session_config_version_2() -> Box<MegolmSessionConfig> {
+    MegolmSessionConfig(vodozemac::megolm::SessionConfig::version_2()).into()
+}
+
+pub fn megolm_session_config_default() -> Box<MegolmSessionConfig> {
+    MegolmSessionConfig(vodozemac::megolm::SessionConfig::default()).into()
+}
 
 pub struct GroupSession(vodozemac::megolm::GroupSession);
 
-pub fn new_group_session(session_config: &SessionConfig) -> Box<GroupSession> {
+pub fn new_group_session(session_config: &MegolmSessionConfig) -> Box<GroupSession> {
     GroupSession::new(session_config).into()
 }
 
@@ -46,7 +58,7 @@ impl ExportedSessionKey {
 }
 
 impl GroupSession {
-    fn new(session_config: &SessionConfig) -> Self {
+    fn new(session_config: &MegolmSessionConfig) -> Self {
         Self(vodozemac::megolm::GroupSession::new(session_config.0))
     }
 
@@ -78,11 +90,11 @@ pub fn group_session_from_pickle(pickle: &str, pickle_key: &[u8; 32]) -> Result<
 
 pub struct InboundGroupSession(vodozemac::megolm::InboundGroupSession);
 
-pub fn new_inbound_group_session(session_key: &SessionKey, session_config: &SessionConfig) -> Box<InboundGroupSession> {
+pub fn new_inbound_group_session(session_key: &SessionKey, session_config: &MegolmSessionConfig) -> Box<InboundGroupSession> {
     InboundGroupSession::new(session_key, session_config).into()
 }
 
-pub fn import_inbound_group_session(session_key: &ExportedSessionKey, session_config: &SessionConfig) -> Box<InboundGroupSession> {
+pub fn import_inbound_group_session(session_key: &ExportedSessionKey, session_config: &MegolmSessionConfig) -> Box<InboundGroupSession> {
     InboundGroupSession::import(session_key, &session_config).into()
 }
 
@@ -95,11 +107,11 @@ pub fn inbound_group_session_from_pickle(
 }
 
 impl InboundGroupSession {
-    fn new(session_key: &SessionKey, session_config: &SessionConfig) -> Self {
+    fn new(session_key: &SessionKey, session_config: &MegolmSessionConfig) -> Self {
         Self(vodozemac::megolm::InboundGroupSession::new(&session_key.0, session_config.0))
     }
 
-    fn import(session_key: &ExportedSessionKey, session_config: &SessionConfig) -> Self {
+    fn import(session_key: &ExportedSessionKey, session_config: &MegolmSessionConfig) -> Self {
         Self(vodozemac::megolm::InboundGroupSession::import(
             &session_key.0,
             session_config.0,

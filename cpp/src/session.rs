@@ -1,5 +1,19 @@
 use super::{ffi::SessionKeys, Curve25519PublicKey, OlmMessage};
 
+pub struct OlmSessionConfig(pub(crate) vodozemac::olm::SessionConfig);
+
+pub fn olm_session_config_version_1() -> Box<OlmSessionConfig> {
+    OlmSessionConfig(vodozemac::olm::SessionConfig::version_1()).into()
+}
+
+pub fn olm_session_config_version_2() -> Box<OlmSessionConfig> {
+    OlmSessionConfig(vodozemac::olm::SessionConfig::version_2()).into()
+}
+
+pub fn olm_session_config_default() -> Box<OlmSessionConfig> {
+    OlmSessionConfig(vodozemac::olm::SessionConfig::default()).into()
+}
+
 pub struct Session(pub(crate) vodozemac::olm::Session);
 
 impl Session {
@@ -45,5 +59,3 @@ pub fn session_from_pickle(
     let pickle = vodozemac::olm::SessionPickle::from_encrypted(pickle, pickle_key)?;
     Ok(Session(vodozemac::olm::Session::from_pickle(pickle)).into())
 }
-
-pub struct SessionConfig(pub(crate) vodozemac::olm::SessionConfig);

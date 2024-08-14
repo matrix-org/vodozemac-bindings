@@ -9,10 +9,14 @@ use group_sessions::{
     exported_session_key_from_base64, group_session_from_pickle, import_inbound_group_session,
     inbound_group_session_from_pickle, megolm_message_from_base64, new_group_session,
     new_inbound_group_session, session_key_from_base64, ExportedSessionKey, GroupSession,
-    InboundGroupSession, MegolmMessage, SessionKey, SessionConfig as GroupSessionConfig,
+    InboundGroupSession, MegolmMessage, SessionKey, MegolmSessionConfig, megolm_session_config_version_1,
+    megolm_session_config_version_2, megolm_session_config_default,
 };
 use sas::{mac_from_base64, new_sas, EstablishedSas, Mac, Sas, SasBytes};
-use session::{session_from_pickle, Session, SessionConfig,};
+use session::{
+    session_from_pickle, Session, OlmSessionConfig, olm_session_config_version_1,
+    olm_session_config_version_2, olm_session_config_default,
+};
 use types::{
     curve_key_from_base64, ed25519_key_from_base64, Curve25519PublicKey, Ed25519PublicKey,
     Ed25519Signature,
@@ -74,7 +78,7 @@ mod ffi {
         fn pickle(self: &Account, pickle_key: &[u8; 32]) -> String;
         fn create_outbound_session(
             self: &Account,
-            session_config: &SessionConfig,
+            session_config: &OlmSessionConfig,
             identity_key: &Curve25519PublicKey,
             one_time_key: &Curve25519PublicKey,
         ) -> Result<Box<Session>>;
@@ -88,7 +92,10 @@ mod ffi {
         fn created(self: &OneTimeKeyGenerationResult) -> Vec<Curve25519PublicKey>;
         fn removed(self: &OneTimeKeyGenerationResult) -> Vec<Curve25519PublicKey>;
 
-        type SessionConfig;
+        type OlmSessionConfig;
+        fn olm_session_config_version_1() -> Box<OlmSessionConfig>;
+        fn olm_session_config_version_2() -> Box<OlmSessionConfig>;
+        fn olm_session_config_default() -> Box<OlmSessionConfig>;
 
         type Session;
         fn session_id(self: &Session) -> String;
@@ -124,10 +131,13 @@ mod ffi {
         fn exported_session_key_from_base64(key: &str) -> Result<Box<ExportedSessionKey>>;
         fn to_base64(self: &ExportedSessionKey) -> String;
 
-        type GroupSessionConfig;
+        type MegolmSessionConfig;
+        fn megolm_session_config_version_1() -> Box<MegolmSessionConfig>;
+        fn megolm_session_config_version_2() -> Box<MegolmSessionConfig>;
+        fn megolm_session_config_default() -> Box<MegolmSessionConfig>;
 
         type GroupSession;
-        fn new_group_session(session_config: &GroupSessionConfig) -> Box<GroupSession>;
+        fn new_group_session(session_config: &MegolmSessionConfig) -> Box<GroupSession>;
         fn encrypt(self: &mut GroupSession, plaintext: &str) -> Box<MegolmMessage>;
         fn session_id(self: &GroupSession) -> String;
         fn session_key(self: &GroupSession) -> Box<SessionKey>;
@@ -139,10 +149,10 @@ mod ffi {
         ) -> Result<Box<GroupSession>>;
 
         type InboundGroupSession;
-        fn new_inbound_group_session(session_key: &SessionKey, session_config: &GroupSessionConfig) -> Box<InboundGroupSession>;
+        fn new_inbound_group_session(session_key: &SessionKey, session_config: &MegolmSessionConfig) -> Box<InboundGroupSession>;
         fn import_inbound_group_session(
             session_key: &ExportedSessionKey,
-            session_config: &GroupSessionConfig,
+            session_config: &MegolmSessionConfig,
         ) -> Box<InboundGroupSession>;
         fn decrypt(
             self: &mut InboundGroupSession,

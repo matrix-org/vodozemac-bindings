@@ -1,6 +1,6 @@
 use super::{
     ffi::{InboundCreationResult, OlmMessageParts, OneTimeKey},
-    Curve25519PublicKey, Ed25519PublicKey, Ed25519Signature, Session, SessionConfig
+    Curve25519PublicKey, Ed25519PublicKey, Ed25519Signature, Session, OlmSessionConfig
 };
 
 pub struct OlmMessage(pub(crate) vodozemac::olm::OlmMessage);
@@ -117,7 +117,7 @@ impl Account {
 
     pub fn create_outbound_session(
         &self,
-        session_config: &SessionConfig,
+        session_config: &OlmSessionConfig,
         identity_key: &Curve25519PublicKey,
         one_time_key: &Curve25519PublicKey,
     ) -> Result<Box<Session>, vodozemac::KeyError> {

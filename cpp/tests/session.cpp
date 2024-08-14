@@ -1,7 +1,9 @@
 #include "../../target/cxxbridge/vodozemac/src/lib.rs.h"
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 using namespace rust;
+using testing::ElementsAreArray;
 
 std::array<uint8_t, 32> PICKLE_KEY = {};
 
@@ -22,7 +24,7 @@ SessionCreationResult create_session() {
 
   auto identity_key = bob->curve25519_key();
 
-  auto session = alice->create_outbound_session(*identity_key, *one_time_key);
+  auto session = alice->create_outbound_session(*olm::olm_session_config_default(), *identity_key, *one_time_key);
 
   auto ret = SessionCreationResult{
       std::move(alice),
@@ -81,7 +83,7 @@ TEST(SessionTest, Encryption) {
   EXPECT_STREQ(session->session_id().c_str(),
                bob_session->session_id().c_str());
 
-  EXPECT_STREQ(plaintext, decrypted.c_str());
+  EXPECT_THAT(decrypted, ElementsAreArray(std::string_view(plaintext)));
 }
 
 TEST(SessionTest, InvalidDecryption) {
@@ -107,14 +109,14 @@ TEST(SessionTest, MultipleMessageDecryption) {
   EXPECT_STREQ(session->session_id().c_str(),
                bob_session->session_id().c_str());
 
-  EXPECT_STREQ(plaintext, decrypted.c_str());
+  EXPECT_THAT(decrypted, ElementsAreArray(std::string_view(plaintext)));
 
   plaintext = "Grumble grumble";
 
   message = bob_session->encrypt(plaintext);
   decrypted = session->decrypt(*message);
 
-  EXPECT_STREQ(plaintext, decrypted.c_str());
+  EXPECT_THAT(decrypted, ElementsAreArray(std::string_view(plaintext)));
 }
 
 TEST(SessionTest, PreKeyMatches) {
